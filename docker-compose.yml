@@ -1,0 +1,30 @@
+services:
+  # FENIX Gateway - API Gateway
+  gateway:
+    build:
+      context: ./fenix-gateway
+      dockerfile: Dockerfile
+    container_name: fenix-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+    restart: unless-stopped
+
+  # FENIX Eagle - Tender Monitoring (AI Scrape)
+  eagle:
+    build:
+      context: ./fenix-eagle
+      dockerfile: Dockerfile
+    container_name: fenix-eagle
+    ports:
+      - "8001:8001"
+    environment:
+      - ENVIRONMENT=development
+      - CRAWL4AI_API_KEY=${CRAWL4AI_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge
