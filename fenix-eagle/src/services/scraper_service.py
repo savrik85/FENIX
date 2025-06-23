@@ -115,30 +115,30 @@ class ScraperService:
         mock_results = [
             TenderData(
                 id=str(uuid.uuid4()),
-                title=\"Window Replacement Project - Federal Building\",
-                description=\"Replace all windows in federal building with energy-efficient alternatives\",
+                title="Window Replacement Project - Federal Building",
+                description="Replace all windows in federal building with energy-efficient alternatives",
                 source=TenderSource.SAM_GOV,
-                source_url=\"https://sam.gov/opp/12345\",
+                source_url="https://sam.gov/opp/12345",
                 posting_date=datetime.now() - timedelta(days=1),
                 response_deadline=datetime.now() + timedelta(days=30),
                 estimated_value=150000.0,
-                location=\"Washington, DC\",
-                naics_codes=[\"238150\"],
-                keywords_found=[\"windows\", \"replacement\"],
+                location="Washington, DC",
+                naics_codes=["238150"],
+                keywords_found=["windows", "replacement"],
                 relevance_score=0.85
             ),
             TenderData(
                 id=str(uuid.uuid4()),
-                title=\"Commercial Glazing Services\",
-                description=\"Provide glazing services for new commercial construction\",
+                title="Commercial Glazing Services",
+                description="Provide glazing services for new commercial construction",
                 source=TenderSource.SAM_GOV,
-                source_url=\"https://sam.gov/opp/12346\",
+                source_url="https://sam.gov/opp/12346",
                 posting_date=datetime.now() - timedelta(hours=12),
                 response_deadline=datetime.now() + timedelta(days=21),
                 estimated_value=75000.0,
-                location=\"New York, NY\",
-                naics_codes=[\"238150\"],
-                keywords_found=[\"glazing\", \"commercial\"],
+                location="New York, NY",
+                naics_codes=["238150"],
+                keywords_found=["glazing", "commercial"],
                 relevance_score=0.92
             )
         ]
@@ -167,15 +167,15 @@ class ScraperService:
         mock_results = [
             TenderData(
                 id=str(uuid.uuid4()),
-                title=\"Storefront Installation - Retail Complex\",
-                description=\"Install storefront windows and doors for new retail development\",
+                title="Storefront Installation - Retail Complex",
+                description="Install storefront windows and doors for new retail development",
                 source=TenderSource.DODGE,
-                source_url=\"https://dodge.construction/project/67890\",
+                source_url="https://dodge.construction/project/67890",
                 posting_date=datetime.now() - timedelta(hours=6),
                 response_deadline=datetime.now() + timedelta(days=14),
                 estimated_value=200000.0,
-                location=\"Los Angeles, CA\",
-                keywords_found=[\"storefront\", \"installation\"],
+                location="Los Angeles, CA",
+                keywords_found=["storefront", "installation"],
                 relevance_score=0.78
             )
         ]
@@ -189,18 +189,18 @@ class ScraperService:
             
         job = self.jobs[job_id]
         return {
-            \"job_id\": job.id,
-            \"status\": job.status,
-            \"progress\": job.progress,
-            \"results_count\": job.results_count,
-            \"created_at\": job.created_at,
-            \"started_at\": job.started_at,
-            \"completed_at\": job.completed_at,
-            \"error_message\": job.error_message
+            "job_id": job.id,
+            "status": job.status,
+            "progress": job.progress,
+            "results_count": job.results_count,
+            "created_at": job.created_at,
+            "started_at": job.started_at,
+            "completed_at": job.completed_at,
+            "error_message": job.error_message
         }
         
     async def get_job_results(self, job_id: str) -> Optional[Dict[str, Any]]:
-        \"\"\"Get the results of a completed scraping job\"\"\"
+        """Get the results of a completed scraping job"""
         if job_id not in self.jobs or job_id not in self.results:
             return None
             
@@ -208,13 +208,13 @@ class ScraperService:
         results = self.results[job_id]
         
         return {
-            \"tenders\": results,
-            \"total_count\": len(results),
-            \"job_info\": {
-                \"id\": job.id,
-                \"source\": job.source,
-                \"keywords\": job.keywords,
-                \"completed_at\": job.completed_at
+            "tenders": results,
+            "total_count": len(results),
+            "job_info": {
+                "id": job.id,
+                "source": job.source,
+                "keywords": job.keywords,
+                "completed_at": job.completed_at
             }
         }
         
@@ -224,7 +224,7 @@ class ScraperService:
         source: Optional[str] = None,
         limit: int = 50
     ) -> List[Dict[str, Any]]:
-        \"\"\"List scraping jobs with optional filters\"\"\"
+        """List scraping jobs with optional filters"""
         jobs = list(self.jobs.values())
         
         # Filter by status
@@ -244,13 +244,13 @@ class ScraperService:
         # Convert to dict format
         return [
             {
-                \"id\": job.id,
-                \"source\": job.source,
-                \"status\": job.status,
-                \"progress\": job.progress,
-                \"results_count\": job.results_count,
-                \"created_at\": job.created_at,
-                \"keywords\": job.keywords
+                "id": job.id,
+                "source": job.source,
+                "status": job.status,
+                "progress": job.progress,
+                "results_count": job.results_count,
+                "created_at": job.created_at,
+                "keywords": job.keywords
             }
             for job in jobs
         ]
