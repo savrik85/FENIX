@@ -16,19 +16,19 @@ echo "$(date): Pulling latest changes from main branch..." >> $LOG_FILE
 git pull origin main
 
 echo "$(date): Stopping current containers..." >> $LOG_FILE
-docker-compose down
+docker compose down
 
 echo "$(date): Building new images..." >> $LOG_FILE
-docker-compose build
+docker compose build
 
 echo "$(date): Starting containers..." >> $LOG_FILE
-docker-compose up -d
+docker compose up -d
 
 echo "$(date): Waiting for services to be healthy..." >> $LOG_FILE
 sleep 10
 
 echo "$(date): Checking container status..." >> $LOG_FILE
-docker-compose ps >> $LOG_FILE
+docker compose ps >> $LOG_FILE
 
 echo "$(date): Running health checks..." >> $LOG_FILE
 if command -v make &> /dev/null; then

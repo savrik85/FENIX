@@ -21,20 +21,21 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: ${{ secrets.SERVER_PORT }}
         script: |
-          # Update deployment script
-          cd /root/fenix
-          git pull origin main
-          
-          # Run deployment script
-          if [ -f scripts/deploy.sh ]; then
-            bash scripts/deploy.sh
+          # Check if project directory exists, create if not
+          if [ ! -d /root/fenix ]; then
+            cd /root
+            git clone https://github.com/${{ github.repository }}.git fenix
+            cd fenix
           else
-            # Fallback deployment commands
-            docker-compose down
-            docker-compose build
-            docker-compose up -d
-            docker-compose ps
+            cd /root/fenix
+            git pull origin main
           fi
+          
+          # Run deployment with modern docker compose
+          docker compose down
+          docker compose build
+          docker compose up -d
+          docker compose ps
           
     - name: Notify deployment status
       if: always()
