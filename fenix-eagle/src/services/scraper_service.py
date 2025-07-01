@@ -6,23 +6,34 @@ from loguru import logger
 
 from ..models.tender_models import ScrapingJob, ScrapingStatus, TenderSource, TenderData
 from ..config import settings
+from .crawl4ai_scraper import Crawl4AIScraper
 
 class ScraperService:
     def __init__(self):
         self.jobs: Dict[str, ScrapingJob] = {}
         self.results: Dict[str, List[TenderData]] = {}
         self.is_initialized = False
+        self.crawl4ai_scraper = None
         
     async def initialize(self):
         """Initialize the scraper service"""
         logger.info("Initializing ScraperService")
-        # Here you would initialize database connections, etc.
+        
+        # Initialize Crawl4AI scraper
+        self.crawl4ai_scraper = Crawl4AIScraper()
+        await self.crawl4ai_scraper.initialize()
+        
         self.is_initialized = True
         logger.info("ScraperService initialized successfully")
         
     async def cleanup(self):
         """Cleanup resources"""
         logger.info("Cleaning up ScraperService")
+        
+        # Cleanup Crawl4AI scraper
+        if self.crawl4ai_scraper:
+            await self.crawl4ai_scraper.cleanup()
+            
         self.is_initialized = False
         
     async def create_job(
@@ -105,56 +116,26 @@ class ScraperService:
         return results
         
     async def _scrape_sam_gov(self, job: ScrapingJob) -> List[TenderData]:
-        """Scrape SAM.gov for tender opportunities"""
+        """Scrape SAM.gov for tender opportunities using Crawl4AI"""
         logger.info(f"Scraping SAM.gov with keywords: {job.keywords}")
         
-        # Simulate scraping delay
-        await asyncio.sleep(2)
-        
-        # Mock data for now - will be replaced with actual Crawl4AI implementation
-        mock_results = [
-            TenderData(
-                id=str(uuid.uuid4()),
-                title="Window Replacement Project - Federal Building",
-                description="Replace all windows in federal building with energy-efficient alternatives",
-                source=TenderSource.SAM_GOV,
-                source_url="https://sam.gov/opp/12345",
-                posting_date=datetime.now() - timedelta(days=1),
-                response_deadline=datetime.now() + timedelta(days=30),
-                estimated_value=150000.0,
-                location="Washington, DC",
-                naics_codes=["238150"],
-                keywords_found=["windows", "replacement"],
-                relevance_score=0.85
-            ),
-            TenderData(
-                id=str(uuid.uuid4()),
-                title="Commercial Glazing Services",
-                description="Provide glazing services for new commercial construction",
-                source=TenderSource.SAM_GOV,
-                source_url="https://sam.gov/opp/12346",
-                posting_date=datetime.now() - timedelta(hours=12),
-                response_deadline=datetime.now() + timedelta(days=21),
-                estimated_value=75000.0,
-                location="New York, NY",
-                naics_codes=["238150"],
-                keywords_found=["glazing", "commercial"],
-                relevance_score=0.92
-            )
-        ]
-        
-        # Filter by keywords if specified
-        if job.keywords:
-            filtered_results = []
-            for result in mock_results:
-                if any(keyword.lower() in result.title.lower() or 
-                      keyword.lower() in result.description.lower() 
-                      for keyword in job.keywords):
-                    filtered_results.append(result)
-            mock_results = filtered_results
+        try:
+            if self.crawl4ai_scraper:
+                # Use real Crawl4AI scraping
+                results = await self.crawl4ai_scraper.scrape_sam_gov(
+                    keywords=job.keywords,
+                    max_results=job.max_results
+                )
+                logger.info(f"Crawl4AI returned {len(results)} results")
+                return results
+            else:
+                logger.error("Crawl4AI scraper not available")
+                return []
+                
+        except Exception as e:
+            logger.error(f"Error in SAM.gov scraping: {e}")
+            return []
             
-        # Limit results
-        return mock_results[:job.max_results]
         
     async def _scrape_dodge(self, job: ScrapingJob) -> List[TenderData]:
         """Scrape Dodge Construction for tender opportunities"""
