@@ -1,0 +1,195 @@
+🔥 FENIX - Fenestration Intelligence eXpert
+📋 O projektu
+FENIX je modulární AI-powered systém pro automatizaci procesů společností zabývajících se dodávkou a montáží oken. Systém je navržen jako monorepo s mikroservisní architekturou, kde každý modul běží ve vlastním Docker kontejneru.
+📁 Struktura projektu
+FENIX/
+├── fenix-eagle/          # 🦅 Tender monitoring modul
+│   ├── src/
+│   │   └── main.py      # FastAPI aplikace
+│   ├── tests/           # Unit testy
+│   ├── Dockerfile       # Docker konfigurace
+│   └── requirements.txt # Python závislosti
+│
+├── fenix-archer/        # 🎯 Inquiry processing modul
+│   ├── src/
+│   ├── tests/
+│   ├── Dockerfile
+│   └── requirements.txt
+│
+├── fenix-oracle/        # 🔮 AI & Analytics modul
+│   ├── src/
+│   ├── tests/
+│   ├── Dockerfile
+│   └── requirements.txt
+│
+├── fenix-bolt/          # ⚡ Workflow automation modul
+│   ├── src/
+│   ├── tests/
+│   ├── Dockerfile
+│   └── requirements.txt
+│
+├── fenix-shield/        # 🛡️ Security & compliance modul
+│   ├── src/
+│   ├── tests/
+│   ├── Dockerfile
+│   └── requirements.txt
+│
+├── fenix-gateway/       # 🚪 API Gateway
+│   ├── src/
+│   ├── tests/
+│   ├── Dockerfile
+│   └── requirements.txt
+│
+├── fenix-core/          # 📦 Sdílené komponenty
+│   ├── src/
+│   ├── tests/
+│   ├── Dockerfile
+│   └── requirements.txt
+│
+├── uploads/             # 📁 Adresář pro nahrané soubory
+├── docker-compose.yml   # 🐳 Docker orchestrace
+├── .env.example        # 🔐 Vzorové environment proměnné
+├── .gitignore          # 🚫 Git ignore pravidla
+├── README.md           # 📖 Tento soubor
+└── Makefile            # 🛠️ Build příkazy
+🎯 Moduly systému
+FENIX EAGLE 🦅
+Tender Monitoring Agent - Automatické sledování veřejných zakázek
+
+Monitoruje veřejné zakázky (SAM.gov, Dodge Construction, atd.)
+AI-powered extrakce relevantních informací pomocí Crawl4AI
+Automatické hodnocení relevance pomocí ML
+Integrace s Google Sheets a Asana
+
+Technologie: Crawl4AI, Playwright, BeautifulSoup4, gspread
+FENIX ARCHER 🎯
+Inquiry Processing System - Zpracování poptávek
+
+Příjem poptávek v různých formátech (text, PDF, výkresy)
+OCR zpracování technických výkresů
+AI extrakce strukturovaných dat
+Automatická validace a kategorizace
+
+Technologie: OpenCV, Tesseract OCR, pdfplumber, LangChain
+FENIX ORACLE 🔮
+AI Assistant & Analytics - AI asistent a analytika
+
+Konverzační AI pro zákazníky i zaměstnance
+Prediktivní modely (lead scoring, price optimization)
+Business intelligence dashboardy
+Automatické generování reportů
+
+Technologie: LangChain, OpenAI GPT-4, scikit-learn, XGBoost
+FENIX BOLT ⚡
+Workflow Automation Engine - Automatizace procesů
+
+Event-driven orchestrace
+Automatizace rutinních úkolů
+Integrace mezi systémy
+Workflow management
+
+Technologie: Celery, Redis, FastAPI
+FENIX SHIELD 🛡️
+Security & Compliance - Bezpečnost a compliance
+
+GDPR compliance management
+Audit trail všech operací
+Šifrování citlivých dat
+Bezpečnostní monitoring
+
+Technologie: PostgreSQL, encryption libraries, logging
+FENIX GATEWAY 🚪
+API Gateway - Centrální vstupní bod
+
+Routing požadavků na jednotlivé moduly
+Autentizace a autorizace
+Rate limiting
+API dokumentace
+
+Technologie: FastAPI, httpx
+FENIX CORE 📦
+Shared Components - Sdílené komponenty
+
+Společné databázové modely
+Utility funkce
+Sdílené schémata
+Konfigurace
+
+🛠️ Technologický stack
+
+Jazyk: Python 3.11+
+Framework: FastAPI
+Databáze: PostgreSQL 15
+Cache/Queue: Redis 7
+Kontejnerizace: Docker & Docker Compose
+AI/ML: OpenAI, Anthropic Claude, LangChain
+Web Scraping: Crawl4AI, Playwright
+OCR: Tesseract, OpenCV
+Task Queue: Celery
+
+🚀 Jak začít
+
+Naklonuj repozitář
+bashgit clone <repository-url>
+cd FENIX
+
+Nastav environment proměnné
+bashcp .env.example .env
+# Edituj .env a vyplň své API klíče a credentials
+
+Spusť služby
+bashdocker-compose up -d
+
+Zkontroluj logy
+bashdocker-compose logs -f
+
+API Gateway běží na
+http://localhost:8000
+
+
+📝 Vývoj
+Lokální vývoj jednotlivých modulů
+bash# Například pro EAGLE modul
+cd fenix-eagle
+python -m venv venv
+source venv/bin/activate  # Na Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn src.main:app --reload
+Spuštění testů
+bash# Všechny testy
+make test
+
+# Testy konkrétního modulu
+docker-compose run --rm eagle pytest
+Užitečné příkazy
+bashmake up      # Spustí všechny služby
+make down    # Zastaví všechny služby
+make logs    # Zobrazí logy
+make test    # Spustí testy
+🎯 Aktuální stav
+
+ Základní struktura projektu
+ Docker konfigurace
+ API Gateway implementace
+ EAGLE modul - tender monitoring
+ ARCHER modul - inquiry processing
+ ORACLE modul - AI features
+ BOLT modul - workflow automation
+ SHIELD modul - security
+ Databázové migrace
+ CI/CD pipeline
+ Dokumentace API
+
+🔮 Roadmap
+
+Fáze 1: Infrastruktura a základní API
+Fáze 2: EAGLE - Implementace tender monitoringu
+Fáze 3: ARCHER - Zpracování poptávek
+Fáze 4: ORACLE - AI funkce
+Fáze 5: BOLT - Workflow automatizace
+Fáze 6: SHIELD - Bezpečnost a compliance
+
+📄 Licence
+[Zde doplň typ licence]
+
+FENIX - Transformujeme okna na příležitosti pomocí AI 🔥

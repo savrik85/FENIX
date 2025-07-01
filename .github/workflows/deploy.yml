@@ -1,0 +1,52 @@
+name: Deploy to Linux Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: ${{ secrets.SERVER_PORT }}
+        script: |
+          # Update deployment script
+          cd /root/fenix
+          git pull origin main
+          
+          # Run deployment script
+          if [ -f scripts/deploy.sh ]; then
+            bash scripts/deploy.sh
+          else
+            # Fallback deployment commands
+            docker-compose down
+            docker-compose build
+            docker-compose up -d
+            docker-compose ps
+          fi
+          
+    - name: Notify deployment status
+      if: always()
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: ${{ secrets.SERVER_PORT }}
+        script: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "$(date): GitHub Actions deployment successful" >> /var/log/fenix-deploy.log
+          else
+            echo "$(date): GitHub Actions deployment failed" >> /var/log/fenix-deploy.log
+          fi
