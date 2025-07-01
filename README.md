@@ -244,7 +244,6 @@ FENIX includes GitHub Actions workflow for automatic deployment:
      - `SERVER_USER`: SSH username (e.g., root)
      - `SERVER_PORT`: SSH port (usually 22)
      - `SERVER_SSH_KEY`: Private SSH key from setup script
-     - `SLACK_WEBHOOK`: (Optional) Slack webhook URL for notifications
 
 3. **Server Prerequisites**:
    - CentOS Stream 9 / Ubuntu 20.04+ / Debian 11+
@@ -254,7 +253,7 @@ FENIX includes GitHub Actions workflow for automatic deployment:
 4. **Automatic Deployment**:
    - Push to `main` branch triggers deployment
    - Services are automatically updated on server
-   - Slack notifications sent on success/failure
+   - Deployment status logged to `/var/log/fenix-deploy.log`
 
 #### Manual Deployment
 
@@ -361,7 +360,6 @@ FENIX/
 - [x] API Gateway implementation
 - [x] Basic CI/CD pipeline
 - [x] GitHub Actions auto-deployment
-- [x] Slack notifications for deployments
 
 ### Phase 2: AI Scrape (Eagle) 🔄
 - [x] Basic FastAPI structure
