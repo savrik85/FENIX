@@ -226,6 +226,63 @@ SCRAPING_TIMEOUT=300  # seconds
    # All services running in isolated containers
    ```
 
+### 🚀 Production Deployment
+
+#### Automatic Deployment (CI/CD)
+
+FENIX includes GitHub Actions workflow for automatic deployment:
+
+1. **Setup SSH Key for GitHub Actions**:
+   ```bash
+   ./scripts/setup-auto-deploy.sh
+   ```
+
+2. **Configure GitHub Secrets**:
+   - Go to Settings > Secrets and variables > Actions
+   - Add the following secrets:
+     - `SERVER_HOST`: Your server IP/domain
+     - `SERVER_USER`: SSH username (e.g., root)
+     - `SERVER_PORT`: SSH port (usually 22)
+     - `SERVER_SSH_KEY`: Private SSH key from setup script
+     - `SLACK_WEBHOOK`: (Optional) Slack webhook URL for notifications
+
+3. **Server Prerequisites**:
+   - CentOS Stream 9 / Ubuntu 20.04+ / Debian 11+
+   - Docker and Docker Compose installed
+   - Git installed
+
+4. **Automatic Deployment**:
+   - Push to `main` branch triggers deployment
+   - Services are automatically updated on server
+   - Slack notifications sent on success/failure
+
+#### Manual Deployment
+
+1. **Prepare Server**:
+   ```bash
+   # On server (CentOS example)
+   yum install -y git docker-ce docker-ce-cli containerd.io docker-compose-plugin
+   systemctl start docker
+   systemctl enable docker
+   ```
+
+2. **Clone and Deploy**:
+   ```bash
+   cd /root
+   git clone https://github.com/savrik85/FENIX.git fenix
+   cd fenix
+   cp .env.example .env
+   # Edit .env with your API keys
+   docker compose up -d
+   ```
+
+3. **Verify Deployment**:
+   ```bash
+   docker compose ps
+   curl http://your-server:8000/health
+   curl http://your-server:8001/health
+   ```
+
 ### Communication Patterns
 
 **API Gateway Pattern**:
@@ -303,12 +360,14 @@ FENIX/
 - [x] Docker containerization
 - [x] API Gateway implementation
 - [x] Basic CI/CD pipeline
+- [x] GitHub Actions auto-deployment
+- [x] Slack notifications for deployments
 
 ### Phase 2: AI Scrape (Eagle) 🔄
 - [x] Basic FastAPI structure
 - [x] Health checks and service discovery
 - [x] Scraping sources configuration
-- [ ] Crawl4AI integration
+- [x] Crawl4AI integration ready
 - [ ] SAM.gov real data scraping
 - [ ] AI-powered relevance filtering
 
