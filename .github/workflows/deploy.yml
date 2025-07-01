@@ -21,6 +21,11 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: ${{ secrets.SERVER_PORT }}
         script: |
+          # Install git if not present
+          if ! command -v git &> /dev/null; then
+            apt-get update && apt-get install -y git
+          fi
+          
           # Check if project directory exists, create if not
           if [ ! -d /root/fenix ]; then
             cd /root
@@ -31,8 +36,13 @@ jobs:
             git pull origin main
           fi
           
+          # Copy .env.example to .env if .env doesn't exist
+          if [ ! -f .env ]; then
+            cp .env.example .env
+          fi
+          
           # Run deployment with modern docker compose
-          docker compose down
+          docker compose down || true
           docker compose build
           docker compose up -d
           docker compose ps
