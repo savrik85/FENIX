@@ -21,9 +21,19 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: ${{ secrets.SERVER_PORT }}
         script: |
-          # Install git if not present
+          # Check OS and install git if not present
           if ! command -v git &> /dev/null; then
-            apt-get update && apt-get install -y git
+            echo "Git not found, attempting to install..."
+            if command -v apt-get &> /dev/null; then
+              apt-get update && apt-get install -y git
+            elif command -v yum &> /dev/null; then
+              yum install -y git
+            elif command -v apk &> /dev/null; then
+              apk add --no-cache git
+            else
+              echo "ERROR: Cannot install git - unknown package manager"
+              exit 1
+            fi
           fi
           
           # Check if project directory exists, create if not
@@ -38,7 +48,12 @@ jobs:
           
           # Copy .env.example to .env if .env doesn't exist
           if [ ! -f .env ]; then
-            cp .env.example .env
+            if [ -f .env.example ]; then
+              cp .env.example .env
+            else
+              echo "WARNING: .env.example not found, creating minimal .env"
+              touch .env
+            fi
           fi
           
           # Run deployment with modern docker compose
