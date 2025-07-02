@@ -47,7 +47,11 @@ class Crawl4AIScraper:
         self.session = aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=30),
             headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/91.0.4472.124 Safari/537.36"
+                )
             },
         )
 
@@ -83,7 +87,7 @@ class Crawl4AIScraper:
                     return await self._scrape_with_crawl4ai(api_url, keywords)
                 else:
                     logger.error("Crawl4AI not available and API failed")
-                    raise Exception("Both direct API and Crawl4AI failed")
+                    raise Exception("Both direct API and Crawl4AI failed") from e
 
         except Exception as e:
             logger.error(f"All SAM.gov scraping methods failed: {e}")
@@ -131,9 +135,9 @@ class Crawl4AIScraper:
                 return results
 
         except json.JSONDecodeError as e:
-            raise Exception(f"Failed to parse API JSON response: {e}")
+            raise Exception(f"Failed to parse API JSON response: {e}") from e
         except Exception as e:
-            raise Exception(f"Direct API access error: {e}")
+            raise Exception(f"Direct API access error: {e}") from e
 
     async def _scrape_with_crawl4ai(
         self, url: str, keywords: list[str]
@@ -176,8 +180,9 @@ class Crawl4AIScraper:
                     },
                 },
                 instruction="""
-                Extract government contracting opportunities from this page. 
-                Focus on opportunities related to construction, windows, doors, glazing, and fenestration.
+                Extract government contracting opportunities from this page.
+                Focus on opportunities related to construction, windows, doors,
+                glazing, and fenestration.
                 For each opportunity, extract all available details including:
                 - Title and description
                 - Solicitation/opportunity number
@@ -189,7 +194,7 @@ class Crawl4AIScraper:
                 - Contact information
                 - Set-aside information (small business, etc.)
                 - Direct URL to the opportunity
-                
+
                 Return structured data that can be easily processed.
                 """,
             )

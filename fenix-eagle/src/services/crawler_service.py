@@ -26,9 +26,12 @@ class CrawlerService:
         self.is_initialized = False
 
     async def crawl_url(
-        self, url: str, extract_keywords: list[str] = [], ai_extract: bool = True
+        self, url: str, extract_keywords: list[str] = None, ai_extract: bool = True
     ) -> str:
         """Crawl a specific URL using AI-powered extraction"""
+        if extract_keywords is None:
+            extract_keywords = []
+
         job_id = str(uuid.uuid4())
 
         # Store job info
@@ -57,14 +60,18 @@ class CrawlerService:
             # Update job status
             self.crawl_jobs[job_id]["status"] = "crawling"
 
-            # Mock crawling process - will be replaced with actual Crawl4AI implementation
+            # Mock crawling process - will be replaced with actual Crawl4AI
             await asyncio.sleep(2)
 
             # Simulate extracted content
             extracted_content = ExtractedContent(
                 url=url,
                 title="Mock Crawled Page",
-                content="This is mock content from the crawled page. In real implementation, this would contain the actual extracted text from the webpage.",
+                content=(
+                    "This is mock content from the crawled page. In real "
+                    "implementation, this would contain the actual extracted "
+                    "text from the webpage."
+                ),
                 metadata={
                     "crawl_duration": 2.5,
                     "content_length": 150,

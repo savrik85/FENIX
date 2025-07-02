@@ -137,7 +137,7 @@ async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundT
 
     except Exception as e:
         logger.error(f"Error starting scraping job: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/scrape/status/{job_id}")
@@ -159,7 +159,7 @@ async def get_scraping_status(job_id: str):
         raise
     except Exception as e:
         logger.error(f"Error getting job status: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/scrape/results/{job_id}", response_model=TenderResponse)
@@ -181,7 +181,7 @@ async def get_scraping_results(job_id: str):
         raise
     except Exception as e:
         logger.error(f"Error getting job results: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/scrape/jobs")
@@ -203,7 +203,7 @@ async def list_scraping_jobs(
 
     except Exception as e:
         logger.error(f"Error listing jobs: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # Crawler endpoints
@@ -211,10 +211,13 @@ async def list_scraping_jobs(
 async def crawl_url(
     url: str,
     background_tasks: BackgroundTasks,
-    extract_keywords: list[str] = [],
+    extract_keywords: list[str] = None,
     ai_extract: bool = True,
 ):
     """Crawl a specific URL using AI-powered extraction"""
+    if extract_keywords is None:
+        extract_keywords = []
+
     try:
         if not crawler_service:
             raise HTTPException(
@@ -233,7 +236,7 @@ async def crawl_url(
 
     except Exception as e:
         logger.error(f"Error crawling URL: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # Configuration endpoints

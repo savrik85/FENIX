@@ -50,8 +50,8 @@ class ScraperService:
         # Convert string source to enum
         try:
             source_enum = TenderSource(source)
-        except ValueError:
-            raise ValueError(f"Unsupported source: {source}")
+        except ValueError as e:
+            raise ValueError(f"Unsupported source: {source}") from e
 
         job = ScrapingJob(
             id=job_id,
@@ -150,7 +150,9 @@ class ScraperService:
             TenderData(
                 id=str(uuid.uuid4()),
                 title="Storefront Installation - Retail Complex",
-                description="Install storefront windows and doors for new retail development",
+                description=(
+                    "Install storefront windows and doors for new retail development"
+                ),
                 source=TenderSource.DODGE,
                 source_url="https://dodge.construction/project/67890",
                 posting_date=datetime.now() - timedelta(hours=6),
