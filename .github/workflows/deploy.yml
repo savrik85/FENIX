@@ -13,6 +13,20 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install ruff
+    
+    - name: Run code quality checks
+      run: |
+        cd fenix-eagle && ruff check .
+        cd ../fenix-gateway && ruff check .
+    
     - name: Deploy to server
       uses: appleboy/ssh-action@v1.0.3
       with:

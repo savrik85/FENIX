@@ -14,6 +14,11 @@ help:
 	@echo "  clean      - Clean up containers and volumes"
 	@echo "  dev-setup  - Set up development environment"
 	@echo "  install-deps - Install Python dependencies locally"
+	@echo "  lint       - Check code quality with ruff"
+	@echo "  format     - Format code with ruff"
+	@echo "  lint-fix   - Fix linting issues automatically"
+	@echo "  setup-dev  - Setup pre-commit hooks and dev tools"
+	@echo "  check-code - Run both linting and formatting"
 
 # Build all containers
 build:
@@ -40,6 +45,47 @@ logs:
 test:
 	@echo "Running tests..."
 	docker compose exec eagle pytest tests/ -v || echo "Eagle tests not available yet"
+
+# Code quality commands
+lint:
+	@echo "Running linting for all services..."
+	cd fenix-eagle && ruff check .
+	cd fenix-gateway && ruff check .
+	cd fenix-core && ruff check .
+	cd fenix-oracle && ruff check .
+	cd fenix-archer && ruff check .
+	cd fenix-bolt && ruff check .
+	cd fenix-shield && ruff check .
+
+format:
+	@echo "Formatting code for all services..."
+	cd fenix-eagle && ruff format .
+	cd fenix-gateway && ruff format .
+	cd fenix-core && ruff format .
+	cd fenix-oracle && ruff format .
+	cd fenix-archer && ruff format .
+	cd fenix-bolt && ruff format .
+	cd fenix-shield && ruff format .
+
+lint-fix:
+	@echo "Fixing linting issues for all services..."
+	cd fenix-eagle && ruff check --fix .
+	cd fenix-gateway && ruff check --fix .
+	cd fenix-core && ruff check --fix .
+	cd fenix-oracle && ruff check --fix .
+	cd fenix-archer && ruff check --fix .
+	cd fenix-bolt && ruff check --fix .
+	cd fenix-shield && ruff check --fix .
+
+# Pre-commit setup
+setup-dev:
+	@echo "Setting up development environment..."
+	pip install pre-commit ruff
+	pre-commit install
+	@echo "Development environment ready!"
+
+check-code: lint format
+	@echo "Code quality check complete!"
 	
 # Clean up
 clean:
