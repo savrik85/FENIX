@@ -17,3 +17,7 @@ numpy>=1.26.0
 pandas>=2.1.0
 selenium==4.15.2
 openai>=1.55.3
+
+# Development tools
+ruff>=0.1.8
+pre-commit>=3.6.0
