@@ -381,8 +381,8 @@ class EmailService:
             # Extract tender IDs
             tender_ids = []
             for tender in tenders:
-                if "record_id" in tender:
-                    tender_ids.append(str(tender["record_id"]))
+                if "id" in tender:
+                    tender_ids.append(str(tender["id"]))
                 elif "tender_id" in tender:
                     tender_ids.append(str(tender["tender_id"]))
 

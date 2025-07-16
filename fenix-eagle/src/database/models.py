@@ -25,7 +25,7 @@ class StoredTender(Base):
 
     __tablename__ = "stored_tenders"
 
-    record_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tender_id = Column(String(255), unique=True, index=True)
     title = Column(Text, nullable=False)
     description = Column(Text)
@@ -51,7 +51,7 @@ class MonitoringConfig(Base):
 
     __tablename__ = "monitoring_configs"
 
-    record_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     name = Column(String(255), nullable=False)
     keywords = Column(JSONB, default=list)
     sources = Column(JSONB, default=list)
@@ -67,7 +67,7 @@ class ScrapingJobRecord(Base):
 
     __tablename__ = "scraping_jobs"
 
-    record_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     job_id = Column(String(255), unique=True, index=True)
     source = Column(String(50), nullable=False)
     keywords = Column(JSONB, default=list)
@@ -86,7 +86,7 @@ class NotificationLog(Base):
 
     __tablename__ = "notification_logs"
 
-    record_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tender_ids = Column(JSONB, default=list)
     email_recipients = Column(JSONB, default=list)
     subject = Column(String(255))
