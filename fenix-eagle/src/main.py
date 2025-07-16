@@ -6,6 +6,7 @@ from typing import Any
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from .config import settings
 from .models.tender_models import TenderData
 from .services.crawler_service import CrawlerService
 from .services.scraper_service import ScraperService
@@ -343,6 +344,140 @@ async def get_suggested_keywords():
             "residential windows",
         ],
     }
+
+
+# Monitoring endpoints
+@app.post("/monitoring/config")
+async def create_monitoring_config(
+    name: str, keywords: list[str], sources: list[str], email: str, filters: dict = None
+):
+    """Create new monitoring configuration"""
+    try:
+        from .database.models import MonitoringConfig, get_db
+
+        db = next(get_db())
+
+        config = MonitoringConfig(
+            name=name,
+            keywords=keywords,
+            sources=sources,
+            email_recipients=[email],
+            filters=filters or {},
+            is_active=True,
+        )
+
+        db.add(config)
+        db.commit()
+
+        return {
+            "message": "Monitoring configuration created successfully",
+            "config_id": str(config.id),
+            "config_name": config.name,
+        }
+
+    except Exception as e:
+        logger.error(f"Error creating monitoring config: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.get("/monitoring/configs")
+async def get_monitoring_configs():
+    """Get all monitoring configurations"""
+    try:
+        from .database.models import MonitoringConfig, get_db
+
+        db = next(get_db())
+        configs = db.query(MonitoringConfig).all()
+
+        return {
+            "configs": [
+                {
+                    "id": str(config.id),
+                    "name": config.name,
+                    "keywords": config.keywords,
+                    "sources": config.sources,
+                    "email_recipients": config.email_recipients,
+                    "is_active": config.is_active,
+                    "created_at": config.created_at,
+                    "updated_at": config.updated_at,
+                }
+                for config in configs
+            ]
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting monitoring configs: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.post("/monitoring/test-email")
+async def test_email_notification(email: str):
+    """Test email notification system"""
+    try:
+        from .services.email_service import EmailService
+
+        email_service = EmailService()
+        result = await email_service.send_test_email(email)
+
+        return {
+            "message": "Test email sent"
+            if result["success"]
+            else "Failed to send test email",
+            "success": result["success"],
+            "details": result,
+        }
+
+    except Exception as e:
+        logger.error(f"Error sending test email: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.post("/monitoring/trigger-scan")
+async def trigger_manual_scan(config_name: str = None):
+    """Manually trigger monitoring scan"""
+    try:
+        from .services.scheduler import manual_tender_scan
+
+        # Trigger Celery task
+        task = manual_tender_scan.delay(config_name)
+
+        return {
+            "message": "Manual scan triggered",
+            "task_id": task.id,
+            "config_name": config_name or "all",
+        }
+
+    except Exception as e:
+        logger.error(f"Error triggering manual scan: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.get("/monitoring/stats")
+async def get_monitoring_statistics():
+    """Get monitoring system statistics"""
+    try:
+        from .services.deduplication_service import DeduplicationService
+
+        dedup_service = DeduplicationService()
+        stats = await dedup_service.get_duplicate_statistics()
+
+        return {
+            "monitoring_stats": stats,
+            "system_info": {
+                "daily_scan_time": (
+                    f"{getattr(settings, 'daily_scan_hour', 8)}:"
+                    f"{getattr(settings, 'daily_scan_minute', 0):02d}"
+                ),
+                "monitoring_enabled": getattr(settings, "monitoring_enabled", True),
+                "default_notification_email": getattr(
+                    settings, "default_notification_email", "not_configured"
+                ),
+            },
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting monitoring stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 if __name__ == "__main__":

@@ -59,6 +59,24 @@ class Settings(BaseSettings):
     browser_headless: bool = True
     browser_timeout: int = 30000  # milliseconds
 
+    # Email Configuration
+    smtp_server: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    email_username: str | None = None
+    email_password: str | None = None
+    default_notification_email: str | None = None
+
+    # Monitoring Configuration
+    monitoring_enabled: bool = True
+    daily_scan_hour: int = 8
+    daily_scan_minute: int = 0
+    min_relevance_score: float = 0.3
+
+    # Data Retention Configuration
+    tender_retention_days: int = 90
+    job_retention_days: int = 30
+    notification_retention_days: int = 60
+
     class Config:
         env_file = ".env"
         case_sensitive = False

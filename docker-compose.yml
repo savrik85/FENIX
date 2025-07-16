@@ -1,4 +1,53 @@
 services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: fenix-postgres
+    environment:
+      POSTGRES_DB: fenix
+      POSTGRES_USER: fenix
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fenix_password}
+      POSTGRES_SHARED_BUFFERS: ${POSTGRES_SHARED_BUFFERS:-256MB}
+      POSTGRES_EFFECTIVE_CACHE_SIZE: ${POSTGRES_EFFECTIVE_CACHE_SIZE:-1GB}
+      POSTGRES_MAINTENANCE_WORK_MEM: ${POSTGRES_MAINTENANCE_WORK_MEM:-64MB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./logs:/var/log/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fenix"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis Cache and Message Broker
+  redis:
+    image: redis:7-alpine
+    container_name: fenix-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  # Database Migration Service
+  migration:
+    build:
+      context: ./fenix-eagle
+      dockerfile: Dockerfile
+    container_name: fenix-migration
+    environment:
+      - DATABASE_URL=postgresql://fenix:fenix_password@postgres:5432/fenix
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: python -m src.database.migrations
+    restart: "no"
+
   # FENIX Gateway - API Gateway
   gateway:
     build:
@@ -8,8 +57,27 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - ENVIRONMENT=development
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DEBUG=${DEBUG:-false}
+      - DATABASE_URL=postgresql://fenix:fenix_password@postgres:5432/fenix
+      - REDIS_URL=redis://redis:6379/0
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      migration:
+        condition: service_completed_successfully
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - ./logs:/app/logs
 
   # FENIX Eagle - Tender Monitoring (AI Scrape)
   eagle:
@@ -20,12 +88,136 @@ services:
     ports:
       - "8001:8001"
     environment:
-      - ENVIRONMENT=development
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DEBUG=${DEBUG:-false}
+      - DATABASE_URL=postgresql://fenix:fenix_password@postgres:5432/fenix
+      - REDIS_URL=redis://redis:6379/0
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - CRAWL4AI_API_KEY=${CRAWL4AI_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - SHOVELS_AI_API_KEY=${SHOVELS_AI_API_KEY:-}
       - SAM_GOV_API_KEY=${SAM_GOV_API_KEY:-}
+      - SMTP_SERVER=${SMTP_SERVER:-}
+      - SMTP_PORT=${SMTP_PORT:-}
+      - EMAIL_USERNAME=${EMAIL_USERNAME:-}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
+      - DEFAULT_NOTIFICATION_EMAIL=${DEFAULT_NOTIFICATION_EMAIL:-}
+      - MAX_CONCURRENT_SCRAPING_JOBS=${MAX_CONCURRENT_SCRAPING_JOBS:-3}
+      - BROWSER_HEADLESS=${BROWSER_HEADLESS:-true}
+      - BROWSER_TIMEOUT=${BROWSER_TIMEOUT:-30000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      migration:
+        condition: service_completed_successfully
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - ./logs:/app/logs
+
+  # Celery Beat Scheduler
+  celery-beat:
+    build:
+      context: ./fenix-eagle
+      dockerfile: Dockerfile
+    container_name: fenix-celery-beat
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DEBUG=${DEBUG:-false}
+      - DATABASE_URL=postgresql://fenix:fenix_password@postgres:5432/fenix
+      - REDIS_URL=redis://redis:6379/0
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CRAWL4AI_API_KEY=${CRAWL4AI_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - SHOVELS_AI_API_KEY=${SHOVELS_AI_API_KEY:-}
+      - SAM_GOV_API_KEY=${SAM_GOV_API_KEY:-}
+      - SMTP_SERVER=${SMTP_SERVER:-}
+      - SMTP_PORT=${SMTP_PORT:-}
+      - EMAIL_USERNAME=${EMAIL_USERNAME:-}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
+      - DEFAULT_NOTIFICATION_EMAIL=${DEFAULT_NOTIFICATION_EMAIL:-}
+      - DAILY_SCAN_HOUR=${DAILY_SCAN_HOUR:-8}
+      - DAILY_SCAN_MINUTE=${DAILY_SCAN_MINUTE:-0}
+      - MONITORING_ENABLED=${MONITORING_ENABLED:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      migration:
+        condition: service_completed_successfully
+    command: celery -A src.services.scheduler beat --loglevel=info
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "celery", "-A", "src.services.scheduler", "inspect", "ping"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - ./logs:/app/logs
+
+  # Celery Worker
+  celery-worker:
+    build:
+      context: ./fenix-eagle
+      dockerfile: Dockerfile
+    container_name: fenix-celery-worker
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - DEBUG=${DEBUG:-false}
+      - DATABASE_URL=postgresql://fenix:fenix_password@postgres:5432/fenix
+      - REDIS_URL=redis://redis:6379/0
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CRAWL4AI_API_KEY=${CRAWL4AI_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - SHOVELS_AI_API_KEY=${SHOVELS_AI_API_KEY:-}
+      - SAM_GOV_API_KEY=${SAM_GOV_API_KEY:-}
+      - SMTP_SERVER=${SMTP_SERVER:-}
+      - SMTP_PORT=${SMTP_PORT:-}
+      - EMAIL_USERNAME=${EMAIL_USERNAME:-}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
+      - DEFAULT_NOTIFICATION_EMAIL=${DEFAULT_NOTIFICATION_EMAIL:-}
+      - CELERY_WORKER_CONCURRENCY=${CELERY_WORKER_CONCURRENCY:-2}
+      - CELERY_WORKER_MAX_TASKS_PER_CHILD=${CELERY_WORKER_MAX_TASKS_PER_CHILD:-1000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      migration:
+        condition: service_completed_successfully
+    command: celery -A src.services.scheduler worker --loglevel=info --concurrency=${CELERY_WORKER_CONCURRENCY:-2} --max-tasks-per-child=${CELERY_WORKER_MAX_TASKS_PER_CHILD:-1000}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "celery", "-A", "src.services.scheduler", "inspect", "ping"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - ./logs:/app/logs
+
+  # Mail testing server (remove in production)
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "8025:8025"  # Web UI
+      - "1025:1025"  # SMTP server
+    restart: unless-stopped
+    profiles:
+      - testing
+
+volumes:
+  postgres_data:
+  redis_data:
 
 networks:
   default:

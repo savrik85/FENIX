@@ -72,12 +72,51 @@ jobs:
 
           # Update .env with secrets
           sed -i 's/SAM_GOV_API_KEY=.*/SAM_GOV_API_KEY=${{ secrets.SAM_GOV_API_KEY }}/' .env
+          sed -i 's/OPENAI_API_KEY=.*/OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}/' .env
+          sed -i 's/CRAWL4AI_API_KEY=.*/CRAWL4AI_API_KEY=${{ secrets.CRAWL4AI_API_KEY }}/' .env
+          sed -i 's/SHOVELS_AI_API_KEY=.*/SHOVELS_AI_API_KEY=${{ secrets.SHOVELS_AI_API_KEY }}/' .env
+
+          # E-mail configuration
+          sed -i 's/SMTP_SERVER=.*/SMTP_SERVER=${{ secrets.SMTP_SERVER }}/' .env
+          sed -i 's/SMTP_PORT=.*/SMTP_PORT=${{ secrets.SMTP_PORT }}/' .env
+          sed -i 's/EMAIL_USERNAME=.*/EMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}/' .env
+          sed -i 's/EMAIL_PASSWORD=.*/EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}/' .env
+          sed -i 's/DEFAULT_NOTIFICATION_EMAIL=.*/DEFAULT_NOTIFICATION_EMAIL=${{ secrets.DEFAULT_NOTIFICATION_EMAIL }}/' .env
 
           # Run deployment with modern docker compose
+          echo "$(date): Starting FENIX deployment with monitoring..." >> /var/log/fenix-deploy.log
+
+          # Stop services
           docker compose down || true
+
+          # Create volumes if needed
+          docker volume create fenix_postgres_data || true
+          docker volume create fenix_redis_data || true
+
+          # Build and start services
           docker compose build
           docker compose up -d
+
+          # Wait for database to be healthy
+          echo "$(date): Waiting for database to be healthy..." >> /var/log/fenix-deploy.log
+          timeout=60
+          while [ $timeout -gt 0 ]; do
+            if docker compose exec postgres pg_isready -U fenix > /dev/null 2>&1; then
+              echo "$(date): Database is ready!" >> /var/log/fenix-deploy.log
+              break
+            fi
+            sleep 2
+            timeout=$((timeout-2))
+          done
+
+          # Check all services
           docker compose ps
+
+          # Test monitoring system
+          sleep 10
+          curl -s http://localhost:8001/health || echo "Eagle service not responding"
+
+          echo "$(date): Deployment completed with monitoring system!" >> /var/log/fenix-deploy.log
 
     - name: Notify deployment status
       if: always()
