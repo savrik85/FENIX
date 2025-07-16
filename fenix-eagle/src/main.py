@@ -54,7 +54,11 @@ app = FastAPI(
 
 # Request/Response Models
 class ScrapingRequest(BaseModel):
-    source: str = Field(..., description="Scraping source (e.g., 'sam.gov', 'dodge')")
+    source: str = Field(
+        ...,
+        description="Scraping source (e.g., 'sam.gov', 'dodge', 'construction.com', "
+        "'nyc.opendata', 'shovels.ai')",
+    )
     keywords: list[str] = Field(default=[], description="Keywords to search for")
     filters: dict[str, Any] = Field(default={}, description="Additional filters")
     max_results: int = Field(default=100, description="Maximum number of results")
@@ -95,6 +99,9 @@ async def root():
             "Tender monitoring",
             "AI-powered scraping",
             "SAM.gov integration",
+            "Construction.com integration",
+            "NYC Open Data integration",
+            "Shovels AI integration",
             "Mock data for testing",
         ],
         "endpoints": {
@@ -258,6 +265,44 @@ async def get_available_sources():
                 "description": "Construction project leads",
                 "supported_filters": ["project_type", "location", "value_range"],
                 "status": "mock_data_only",
+            },
+            {
+                "id": "construction.com",
+                "name": "Construction.com",
+                "description": "Dodge Construction Network - commercial "
+                "construction projects",
+                "supported_filters": [
+                    "project_type",
+                    "location",
+                    "value_range",
+                    "project_stage",
+                ],
+                "status": "available",
+            },
+            {
+                "id": "nyc.opendata",
+                "name": "NYC Open Data",
+                "description": "NYC Department of Buildings permit data - FREE API",
+                "supported_filters": [
+                    "borough",
+                    "permit_type",
+                    "work_type",
+                    "date_range",
+                ],
+                "status": "available",
+            },
+            {
+                "id": "shovels.ai",
+                "name": "Shovels AI",
+                "description": "Building permits and contractor data - FREE TRIAL "
+                "(1000 requests)",
+                "supported_filters": [
+                    "geo_id",
+                    "contractor_id",
+                    "permit_type",
+                    "date_range",
+                ],
+                "status": "available",
             },
         ]
     }

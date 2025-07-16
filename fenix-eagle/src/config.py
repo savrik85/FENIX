@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # SAM.gov API
     sam_gov_api_key: str | None = None
 
+    # Shovels AI API
+    shovels_ai_api_key: str | None = None
+
     # Dodge Construction API
     dodge_api_key: str | None = None
 

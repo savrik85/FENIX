@@ -49,7 +49,7 @@ make health
 # Run fenix-eagle (AI Scrape) in development mode
 make dev-eagle
 
-# Run API gateway in development mode  
+# Run API gateway in development mode
 make dev-gateway
 ```
 
@@ -106,7 +106,7 @@ make db-reset
 POST http://localhost:8001/scrape/start
 {
   "source": "sam.gov",
-  "keywords": ["windows", "doors", "glazing"],
+  "keywords": ["windows", "window", "glazing"],
   "max_results": 50
 }
 
@@ -142,7 +142,7 @@ OPENAI_API_KEY=your_openai_key
 CRAWL4AI_API_KEY=your_crawl4ai_key
 SAM_GOV_API_KEY=your_sam_gov_key
 
-# Optional integrations  
+# Optional integrations
 GOOGLE_CREDENTIALS_FILE=credentials.json
 ASANA_ACCESS_TOKEN=your_asana_token
 ```

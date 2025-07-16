@@ -16,11 +16,14 @@ class ScrapingStatus(str, Enum):
 class TenderSource(str, Enum):
     SAM_GOV = "sam.gov"
     DODGE = "dodge"
+    CONSTRUCTION_COM = "construction.com"
+    NYC_OPEN_DATA = "nyc.opendata"
+    SHOVELS_AI = "shovels.ai"
     CUSTOM = "custom"
 
 
 class TenderData(BaseModel):
-    id: str | None = None
+    tender_id: str | None = None
     title: str
     description: str
     source: TenderSource
@@ -40,7 +43,7 @@ class TenderData(BaseModel):
 
 
 class ScrapingJob(BaseModel):
-    id: str
+    job_id: str
     source: TenderSource
     keywords: list[str] = Field(default=[])
     filters: dict[str, Any] = Field(default={})

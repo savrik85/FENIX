@@ -113,6 +113,12 @@ class ScraperService:
             results = await self._scrape_sam_gov(job)
         elif job.source == TenderSource.DODGE:
             results = await self._scrape_dodge(job)
+        elif job.source == TenderSource.CONSTRUCTION_COM:
+            results = await self._scrape_construction_com(job)
+        elif job.source == TenderSource.NYC_OPEN_DATA:
+            results = await self._scrape_nyc_opendata(job)
+        elif job.source == TenderSource.SHOVELS_AI:
+            results = await self._scrape_shovels_ai(job)
         else:
             raise ValueError(f"Unsupported source: {job.source}")
 
@@ -165,6 +171,68 @@ class ScraperService:
         ]
 
         return mock_results[: job.max_results]
+
+    async def _scrape_construction_com(self, job: ScrapingJob) -> list[TenderData]:
+        """Scrape Construction.com for project opportunities using Crawl4AI"""
+        logger.info(f"Scraping Construction.com with keywords: {job.keywords}")
+
+        try:
+            if self.crawl4ai_scraper:
+                # Use real Crawl4AI scraping for Construction.com
+                results = await self.crawl4ai_scraper.scrape_construction_com(
+                    keywords=job.keywords, max_results=job.max_results
+                )
+                logger.info(
+                    f"Construction.com Crawl4AI returned {len(results)} results"
+                )
+                return results
+            else:
+                logger.error("Crawl4AI scraper not available")
+                return []
+
+        except Exception as e:
+            logger.error(f"Error in Construction.com scraping: {e}")
+            return []
+
+    async def _scrape_nyc_opendata(self, job: ScrapingJob) -> list[TenderData]:
+        """Scrape NYC Open Data for building permits using free API"""
+        logger.info(f"Scraping NYC Open Data with keywords: {job.keywords}")
+
+        try:
+            if self.crawl4ai_scraper:
+                # Use NYC Open Data API
+                results = await self.crawl4ai_scraper.scrape_nyc_opendata(
+                    keywords=job.keywords, max_results=job.max_results
+                )
+                logger.info(f"NYC Open Data API returned {len(results)} results")
+                return results
+            else:
+                logger.error("Crawl4AI scraper not available")
+                return []
+
+        except Exception as e:
+            logger.error(f"Error in NYC Open Data scraping: {e}")
+            return []
+
+    async def _scrape_shovels_ai(self, job: ScrapingJob) -> list[TenderData]:
+        """Scrape Shovels AI for building permits and contractor data"""
+        logger.info(f"Scraping Shovels AI with keywords: {job.keywords}")
+
+        try:
+            if self.crawl4ai_scraper:
+                # Use Shovels AI API
+                results = await self.crawl4ai_scraper.scrape_shovels_ai(
+                    keywords=job.keywords, max_results=job.max_results
+                )
+                logger.info(f"Shovels AI API returned {len(results)} results")
+                return results
+            else:
+                logger.error("Crawl4AI scraper not available")
+                return []
+
+        except Exception as e:
+            logger.error(f"Error in Shovels AI scraping: {e}")
+            return []
 
     async def get_job_status(self, job_id: str) -> dict[str, Any] | None:
         """Get the status of a scraping job"""
