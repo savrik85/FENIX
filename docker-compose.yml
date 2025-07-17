@@ -194,7 +194,7 @@ services:
         condition: service_started
       migration:
         condition: service_completed_successfully
-    command: celery -A src.services.scheduler worker --loglevel=info --concurrency=${CELERY_WORKER_CONCURRENCY:-2} --max-tasks-per-child=${CELERY_WORKER_MAX_TASKS_PER_CHILD:-1000}
+    command: celery -A src.services.scheduler worker --loglevel=info --concurrency=1 --max-tasks-per-child=10
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "celery", "-A", "src.services.scheduler", "inspect", "ping"]
