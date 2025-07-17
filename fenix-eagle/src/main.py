@@ -134,10 +134,10 @@ async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundT
         )
 
         # Start scraping in background
-        background_tasks.add_task(scraper_service.execute_scraping_job, job.id)
+        background_tasks.add_task(scraper_service.execute_scraping_job, job.job_id)
 
         return ScrapingResponse(
-            job_id=job.id,
+            job_id=job.job_id,
             status="started",
             message=f"Scraping job started for {request.source}",
             estimated_completion=job.estimated_completion,
