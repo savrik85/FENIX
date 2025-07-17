@@ -241,7 +241,7 @@ class ScraperService:
 
         job = self.jobs[job_id]
         return {
-            "job_id": job.id,
+            "job_id": job.job_id,
             "status": job.status,
             "progress": job.progress,
             "results_count": job.results_count,
@@ -263,7 +263,7 @@ class ScraperService:
             "tenders": results,
             "total_count": len(results),
             "job_info": {
-                "id": job.id,
+                "id": job.job_id,
                 "source": job.source,
                 "keywords": job.keywords,
                 "completed_at": job.completed_at,
@@ -293,7 +293,7 @@ class ScraperService:
         # Convert to dict format
         return [
             {
-                "id": job.id,
+                "id": job.job_id,
                 "source": job.source,
                 "status": job.status,
                 "progress": job.progress,
