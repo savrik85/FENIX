@@ -54,7 +54,7 @@ class ScraperService:
             raise ValueError(f"Unsupported source: {source}") from e
 
         job = ScrapingJob(
-            id=job_id,
+            job_id=job_id,
             source=source_enum,
             keywords=keywords,
             filters=filters,

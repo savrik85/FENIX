@@ -43,7 +43,7 @@ class TenderData(BaseModel):
 
 
 class ScrapingJob(BaseModel):
-    job_id: str = Field(alias="id")
+    job_id: str
     source: TenderSource
     keywords: list[str] = Field(default=[])
     filters: dict[str, Any] = Field(default={})
