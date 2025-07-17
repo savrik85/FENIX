@@ -347,10 +347,16 @@ async def get_suggested_keywords():
 
 
 # Monitoring endpoints
+class MonitoringConfigRequest(BaseModel):
+    name: str
+    keywords: list[str]
+    sources: list[str]
+    emails: list[str] = Field(description="List of email addresses for notifications")
+    filters: dict[str, Any] = Field(default={}, description="Additional filters")
+
+
 @app.post("/monitoring/config")
-async def create_monitoring_config(
-    name: str, keywords: list[str], sources: list[str], email: str, filters: dict = None
-):
+async def create_monitoring_config(request: MonitoringConfigRequest):
     """Create new monitoring configuration"""
     try:
         from .database.models import MonitoringConfig, get_db
@@ -358,11 +364,11 @@ async def create_monitoring_config(
         db = next(get_db())
 
         config = MonitoringConfig(
-            name=name,
-            keywords=keywords,
-            sources=sources,
-            email_recipients=[email],
-            filters=filters or {},
+            name=request.name,
+            keywords=request.keywords,
+            sources=request.sources,
+            email_recipients=request.emails,
+            filters=request.filters,
             is_active=True,
         )
 
@@ -373,6 +379,7 @@ async def create_monitoring_config(
             "message": "Monitoring configuration created successfully",
             "config_id": str(config.id),
             "config_name": config.name,
+            "email_recipients": request.emails,
         }
 
     except Exception as e:
