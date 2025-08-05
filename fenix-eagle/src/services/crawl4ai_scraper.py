@@ -1,4 +1,5 @@
 import json
+import os
 import uuid
 from datetime import datetime, timedelta
 from typing import Any
@@ -505,8 +506,9 @@ class Crawl4AIScraper:
                     },
                 )
 
-                # Only add if relevance score is decent
-                if relevance_score > 0.2:
+                # Only add if relevance score meets threshold
+                min_relevance = float(os.getenv("MIN_RELEVANCE_SCORE", "0.3"))
+                if relevance_score >= min_relevance:
                     tenders.append(tender)
 
             except Exception as e:
