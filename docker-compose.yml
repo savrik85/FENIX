@@ -11,7 +11,7 @@ services:
       POSTGRES_EFFECTIVE_CACHE_SIZE: ${POSTGRES_EFFECTIVE_CACHE_SIZE:-1GB}
       POSTGRES_MAINTENANCE_WORK_MEM: ${POSTGRES_MAINTENANCE_WORK_MEM:-64MB}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
@@ -28,7 +28,7 @@ services:
     image: redis:7-alpine
     container_name: fenix-redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -103,6 +103,7 @@ services:
       - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
       - DEFAULT_NOTIFICATION_EMAIL=${DEFAULT_NOTIFICATION_EMAIL:-}
       - MAX_CONCURRENT_SCRAPING_JOBS=${MAX_CONCURRENT_SCRAPING_JOBS:-3}
+      - MIN_RELEVANCE_SCORE=${MIN_RELEVANCE_SCORE:-0.3}
       - BROWSER_HEADLESS=${BROWSER_HEADLESS:-true}
       - BROWSER_TIMEOUT=${BROWSER_TIMEOUT:-30000}
     depends_on:
