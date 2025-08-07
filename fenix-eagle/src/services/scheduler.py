@@ -203,7 +203,7 @@ async def _wait_for_job_completion(scraper_service, job_id: str, timeout: int = 
     """
     start_time = datetime.now()
 
-    while (datetime.now() - start_time).seconds < timeout:
+    while (datetime.now() - start_time).total_seconds() < timeout:
         try:
             job_status = await scraper_service.get_job_status(job_id)
 
