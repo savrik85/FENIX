@@ -41,7 +41,10 @@
       "Bash(curl -X GET \"http://localhost:8001/scrape/status/7ec65a9c-6bcf-4115-8480-4ddb68e28667\")",
       "Bash(cp:*)",
       "Bash(open http://localhost:8025)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(for port in 8000 8001 8025 1025 5433 6380)",
+      "Bash(do nc -z localhost $port)",
+      "Bash(echo:*)"
     ],
     "deny": []
   }

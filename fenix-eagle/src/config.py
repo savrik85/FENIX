@@ -72,6 +72,9 @@ class Settings(BaseSettings):
     daily_scan_minute: int = 0
     min_relevance_score: float = 0.3
 
+    # Service Discovery
+    eagle_service_url: str = "http://eagle:8001"
+
     # Data Retention Configuration
     tender_retention_days: int = 90
     job_retention_days: int = 30
