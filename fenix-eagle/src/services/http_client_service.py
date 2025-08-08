@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import aiohttp
 
@@ -13,7 +13,7 @@ class EagleServiceClient:
 
     def __init__(self, eagle_base_url: str = "http://eagle:8001"):
         self.eagle_base_url = eagle_base_url
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
 
     async def __aenter__(self):
         self.session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30))
@@ -42,8 +42,8 @@ class EagleServiceClient:
         source: str,
         keywords: list[str],
         max_results: int = 50,
-        filters: Optional[dict[str, Any]] = None,
-    ) -> Optional[dict[str, Any]]:
+        filters: dict[str, Any] | None = None,
+    ) -> dict[str, Any] | None:
         """Create a scraping job via Eagle service API"""
         try:
             if not self.session:
@@ -71,7 +71,7 @@ class EagleServiceClient:
             logger.error(f"Error creating scraping job: {e}")
             return None
 
-    async def get_job_status(self, job_id: str) -> Optional[dict[str, Any]]:
+    async def get_job_status(self, job_id: str) -> dict[str, Any] | None:
         """Get job status via Eagle service API"""
         try:
             if not self.session:
@@ -91,7 +91,7 @@ class EagleServiceClient:
             logger.error(f"Error getting job status: {e}")
             return None
 
-    async def get_job_results(self, job_id: str) -> Optional[dict[str, Any]]:
+    async def get_job_results(self, job_id: str) -> dict[str, Any] | None:
         """Get job results via Eagle service API"""
         try:
             if not self.session:
@@ -113,7 +113,7 @@ class EagleServiceClient:
 
     async def wait_for_job_completion(
         self, job_id: str, timeout: int = 600, poll_interval: int = 2
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Wait for job completion with proper polling"""
         start_time = asyncio.get_event_loop().time()
 
@@ -140,3 +140,8 @@ class EagleServiceClient:
 
             # Still in progress, wait and retry
             await asyncio.sleep(poll_interval)
+
+    async def cleanup(self) -> None:
+        """Clean up HTTP session if it exists"""
+        if self.session and not self.session.closed:
+            await self.session.close()

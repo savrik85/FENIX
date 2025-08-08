@@ -215,7 +215,8 @@ async def _daily_tender_scan_async():
                         )
 
                         logger.info(
-                            f"Found {len(new_tenders)} new tenders for config {config.name}"
+                            f"Found {len(new_tenders)} new tenders for "
+                            f"config {config.name}"
                         )
 
             result = {
@@ -227,7 +228,8 @@ async def _daily_tender_scan_async():
             }
 
             logger.info(
-                f"Daily scan completed successfully: {total_new_tenders} new tenders found"
+                f"Daily scan completed successfully: {total_new_tenders} "
+                f"new tenders found"
             )
             return result
 
@@ -375,22 +377,7 @@ async def _manual_scan_async(config_name: str = None):
     # Similar to daily scan but can target specific config
     db = next(get_db())
 
-    # Use HTTP client to communicate with Eagle service
-    eagle_url = getattr(settings, "eagle_service_url", "http://eagle:8001")
-    http_client = EagleServiceClient(eagle_base_url=eagle_url)
-
     try:
-        # Health check first
-        logger.info("Performing health check on Eagle service for manual scan...")
-        is_healthy = await http_client.health_check()
-        if not is_healthy:
-            logger.error("Eagle service is not healthy, aborting manual scan")
-            return {
-                "status": "failed",
-                "error": "Eagle service unavailable",
-                "timestamp": datetime.now().isoformat(),
-            }
-
         query = db.query(MonitoringConfig).filter_by(is_active=True)
 
         if config_name:
@@ -401,11 +388,10 @@ async def _manual_scan_async(config_name: str = None):
         if not configs:
             return {"status": "error", "message": "No matching configurations found"}
 
-        # Run the same logic as daily scan but use our HTTP client
+        # Run the same logic as daily scan - it handles its own HTTP client
         return await _daily_tender_scan_async()
 
     finally:
-        await http_client.cleanup()
         db.close()
 
 
