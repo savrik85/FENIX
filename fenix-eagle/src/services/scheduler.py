@@ -193,17 +193,28 @@ async def _daily_tender_scan_async():
 
                     if new_tenders:
                         # Store new tenders
-                        stored_tenders = await deduplication_service.store_new_tenders(
-                            new_tenders
-                        )
+                        await deduplication_service.store_new_tenders(new_tenders)
 
                         # Send email notification
                         if config.email_recipients:
-                            await email_service.send_tender_notification(
-                                tenders=stored_tenders,
-                                recipients=config.email_recipients,
-                                config_name=config.name,
-                            )
+                            try:
+                                email_result = await email_service.send_tender_notification(
+                                    tenders=new_tenders,  # Use original tender dicts instead of DB objects
+                                    recipients=config.email_recipients,
+                                    config_name=config.name,
+                                )
+                                if email_result.get("success"):
+                                    logger.info(
+                                        f"Email notification sent successfully to {config.email_recipients}"
+                                    )
+                                else:
+                                    logger.error(
+                                        f"Email notification failed: {email_result.get('error')}"
+                                    )
+                            except Exception as e:
+                                logger.error(
+                                    f"Failed to send email notification: {str(e)}"
+                                )
 
                         total_new_tenders += len(new_tenders)
                         scan_results.append(
