@@ -214,15 +214,16 @@ class EmailService:
                         <strong>Lokalita:</strong> {{ tender.location or 'Nezadáno' }}
                         </span>
                         <span class="meta-item"><strong>Datum:</strong>
-                        {{ tender.posting_date.strftime('%d.%m.%Y')
-                           if tender.posting_date else 'Nezadáno' }}</span>
+                        {{ tender.posting_date[:10] if tender.posting_date
+                           else 'Nezadáno' }}</span>
                         {% if tender.estimated_value %}
                         <span class="meta-item"><strong>Hodnota:</strong>
                         ${{ "{:,.0f}".format(tender.estimated_value) }}</span>
                         {% endif %}
                         {% if tender.response_deadline %}
                         <span class="meta-item"><strong>Deadline:</strong>
-                        {{ tender.response_deadline.strftime('%d.%m.%Y') }}</span>
+                        {{ tender.response_deadline[:10] if tender.response_deadline
+                           else 'Nezadáno' }}</span>
                         {% endif %}
                         {% if tender.relevance_score %}
                         <span class="meta-item {{ 'relevance-high' if
