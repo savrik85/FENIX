@@ -229,6 +229,47 @@ async def _daily_tender_scan_async():
                             f"Found {len(new_tenders)} new tenders for "
                             f"config {config.name}"
                         )
+                    else:
+                        # Check if we should send empty report for this config
+                        if (
+                            hasattr(config, "send_empty_reports")
+                            and config.send_empty_reports
+                            and config.email_recipients
+                        ):
+                            try:
+                                empty_report_result = (
+                                    await email_service.send_empty_report_notification(
+                                        recipients=config.email_recipients,
+                                        config_name=config.name,
+                                        scan_results=[
+                                            {
+                                                "config": config.name,
+                                                "sources_scanned": len(config.sources),
+                                            }
+                                        ],
+                                    )
+                                )
+                                if empty_report_result.get("success"):
+                                    logger.info(
+                                        f"Empty report email sent successfully to {config.email_recipients}"
+                                    )
+                                else:
+                                    logger.error(
+                                        f"Empty report email failed: {empty_report_result.get('error')}"
+                                    )
+                            except Exception as e:
+                                logger.error(
+                                    f"Failed to send empty report notification: {str(e)}"
+                                )
+
+                        # Add scan results even when no new tenders found
+                        scan_results.append(
+                            {
+                                "config": config.name,
+                                "new_tenders": 0,
+                                "sources_scanned": len(config.sources),
+                            }
+                        )
 
             result = {
                 "status": "completed",

@@ -444,3 +444,181 @@ class EmailService:
         except Exception as e:
             logger.error(f"Failed to send test email: {str(e)}")
             return {"success": False, "error": str(e)}
+
+    async def send_empty_report_notification(
+        self, recipients: list[str], config_name: str, scan_results: list[dict] = None
+    ) -> dict[str, Any]:
+        """Send notification when no new relevant tenders were found"""
+        try:
+            if not recipients:
+                if self.default_email:
+                    recipients = [self.default_email]
+                else:
+                    return {"success": False, "error": "No recipients specified"}
+
+            # Generate email content
+            subject = f"📊 Žádné nové nabídky - {config_name}"
+            html_body = self._generate_empty_report_html(config_name, scan_results)
+            text_body = self._generate_empty_report_text(config_name, scan_results)
+
+            # Send email
+            success = await self._send_email(
+                recipients=recipients,
+                subject=subject,
+                html_body=html_body,
+                text_body=text_body,
+            )
+
+            # Log the notification
+            await self._log_notification(
+                tenders=[],
+                recipients=recipients,
+                subject=subject,
+                success=success,
+                config_name=config_name,
+            )
+
+            return {
+                "success": success,
+                "recipients": recipients,
+                "tender_count": 0,
+                "config_name": config_name,
+                "type": "empty_report",
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to send empty report notification: {str(e)}")
+            return {"success": False, "error": str(e)}
+
+    def _generate_empty_report_html(
+        self, config_name: str, scan_results: list[dict] = None
+    ) -> str:
+        """Generate HTML for empty report email"""
+        template_str = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }
+                .header {
+                    background-color: #34495e;
+                    color: white;
+                    padding: 20px;
+                    text-align: center;
+                    border-radius: 8px;
+                }
+                .content {
+                    margin: 20px 0;
+                    padding: 20px;
+                    background-color: #f8f9fa;
+                    border-radius: 8px;
+                    border-left: 4px solid #3498db;
+                }
+                .scan-summary {
+                    background-color: #ecf0f1;
+                    padding: 15px;
+                    border-radius: 8px;
+                    margin: 15px 0;
+                }
+                .footer {
+                    margin-top: 30px;
+                    padding-top: 20px;
+                    border-top: 1px solid #ddd;
+                    font-size: 12px;
+                    color: #666;
+                    text-align: center;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>📊 FENIX - Monitoring Report</h1>
+                <p>Žádné nové relevantní nabídky</p>
+                <p><strong>Konfigurace:</strong> {{ config_name }}</p>
+            </div>
+
+            <div class="content">
+                <h2>📈 Výsledky scanu</h2>
+                <p>Systém FENIX provedl automatický scan všech nakonfigurovaných zdrojů, ale nenašel žádné nové relevantní nabídky odpovídající vašim kritériím.</p>
+
+                {% if scan_results %}
+                <div class="scan-summary">
+                    <h3>Přehled zdrojů:</h3>
+                    <ul>
+                    {% for result in scan_results %}
+                        <li><strong>{{ result.config }}:</strong>
+                        {% if result.get('sources_scanned') %}
+                            {{ result.sources_scanned }} zdrojů prohledáno
+                        {% else %}
+                            Scan dokončen
+                        {% endif %}
+                        </li>
+                    {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <p><strong>💡 Tip:</strong> Monitoring běží automaticky každý den. Jakmile se objeví relevantní nabídky, budete okamžitě informováni emailem.</p>
+            </div>
+
+            <div class="footer">
+                <p>📅 Generováno: {{ timestamp }}</p>
+                <p>🤖 Automaticky generováno systémem FENIX</p>
+                <p>Pro změnu nastavení kontaktujte administrátora</p>
+            </div>
+        </body>
+        </html>
+        """
+
+        from jinja2 import Template
+
+        template = Template(template_str)
+
+        return template.render(
+            config_name=config_name,
+            scan_results=scan_results or [],
+            timestamp=datetime.now().strftime("%d.%m.%Y %H:%M"),
+        )
+
+    def _generate_empty_report_text(
+        self, config_name: str, scan_results: list[dict] = None
+    ) -> str:
+        """Generate plain text for empty report email"""
+        lines = []
+        lines.append("FENIX - Monitoring Report")
+        lines.append("=" * 30)
+        lines.append(f"Konfigurace: {config_name}")
+        lines.append(f"Čas: {datetime.now().strftime('%d.%m.%Y %H:%M')}")
+        lines.append("")
+        lines.append("VÝSLEDEK: Žádné nové relevantní nabídky")
+        lines.append("")
+        lines.append("Systém FENIX provedl automatický scan všech")
+        lines.append("nakonfigurovaných zdrojů, ale nenašel žádné")
+        lines.append("nové relevantní nabídky odpovídající vašim kritériím.")
+        lines.append("")
+
+        if scan_results:
+            lines.append("Přehled zdrojů:")
+            for result in scan_results:
+                sources_info = ""
+                if result.get("sources_scanned"):
+                    sources_info = f" ({result['sources_scanned']} zdrojů)"
+                lines.append(f"- {result['config']}{sources_info}")
+            lines.append("")
+
+        lines.append("Monitoring běží automaticky každý den.")
+        lines.append("Jakmile se objeví relevantní nabídky,")
+        lines.append("budete okamžitě informováni emailem.")
+        lines.append("")
+        lines.append("---")
+        lines.append("Automaticky generováno systémem FENIX")
+
+        return "\n".join(lines)

@@ -57,6 +57,7 @@ class MonitoringConfig(Base):
     sources = Column(JSONB, default=list)
     filters = Column(JSONB, default=dict)
     email_recipients = Column(JSONB, default=list)
+    send_empty_reports = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
