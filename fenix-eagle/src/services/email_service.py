@@ -547,7 +547,8 @@ class EmailService:
 
             <div class="content">
                 <h2>📈 Výsledky scanu</h2>
-                <p>Systém FENIX provedl automatický scan všech nakonfigurovaných zdrojů, ale nenašel žádné nové relevantní nabídky odpovídající vašim kritériím.</p>
+                <p>Systém FENIX provedl scan všech zdrojů,<br>
+                ale nenašel žádné nové relevantní nabídky.</p>
 
                 {% if scan_results %}
                 <div class="scan-summary">
@@ -566,7 +567,8 @@ class EmailService:
                 </div>
                 {% endif %}
 
-                <p><strong>💡 Tip:</strong> Monitoring běží automaticky každý den. Jakmile se objeví relevantní nabídky, budete okamžitě informováni emailem.</p>
+                <p><strong>💡 Tip:</strong> Monitoring běží automaticky.<br>
+                Budete informováni o nových relevantních nabídkách.</p>
             </div>
 
             <div class="footer">

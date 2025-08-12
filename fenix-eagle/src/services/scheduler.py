@@ -198,18 +198,19 @@ async def _daily_tender_scan_async():
                         # Send email notification
                         if config.email_recipients:
                             try:
-                                email_result = await email_service.send_tender_notification(
-                                    tenders=new_tenders,  # Use original tender dicts instead of DB objects
-                                    recipients=config.email_recipients,
-                                    config_name=config.name,
+                                email_result = (
+                                    await email_service.send_tender_notification(
+                                        tenders=new_tenders,
+                                        recipients=config.email_recipients,
+                                        config_name=config.name,
+                                    )
                                 )
                                 if email_result.get("success"):
-                                    logger.info(
-                                        f"Email notification sent successfully to {config.email_recipients}"
-                                    )
+                                    count = len(config.email_recipients)
+                                    logger.info(f"Email sent to {count} recipients")
                                 else:
                                     logger.error(
-                                        f"Email notification failed: {email_result.get('error')}"
+                                        f"Email failed: {email_result.get('error')}"
                                     )
                             except Exception as e:
                                 logger.error(
@@ -250,16 +251,13 @@ async def _daily_tender_scan_async():
                                     )
                                 )
                                 if empty_report_result.get("success"):
-                                    logger.info(
-                                        f"Empty report email sent successfully to {config.email_recipients}"
-                                    )
+                                    logger.info("Empty report sent successfully")
                                 else:
-                                    logger.error(
-                                        f"Empty report email failed: {empty_report_result.get('error')}"
-                                    )
+                                    error_msg = empty_report_result.get("error")
+                                    logger.error(f"Empty report failed: {error_msg}")
                             except Exception as e:
                                 logger.error(
-                                    f"Failed to send empty report notification: {str(e)}"
+                                    f"Failed to send empty report: {str(e)}"
                                 )
 
                         # Add scan results even when no new tenders found

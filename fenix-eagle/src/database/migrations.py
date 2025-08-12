@@ -2,6 +2,7 @@
 """
 Database migration script for FENIX Eagle
 """
+
 import logging
 import sys
 from datetime import datetime
