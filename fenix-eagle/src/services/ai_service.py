@@ -46,21 +46,24 @@ class AIService:
                     {
                         "role": "system",
                         "content": (
-                            "You are a professional business representative of Dual Action Windows (DAW), "
-                            "which has been delivering high-quality European windows and doors to the USA since 2013. "
+                            "You are a professional business representative of "
+                            "Dual Action Windows (DAW), which has been delivering "
+                            "high-quality European windows to USA since 2013. "
                             "IMPORTANT COMPANY INFORMATION: "
-                            "- Founded in 2013 by Petr Pechousek (software engineer from Prague) "
+                            "- Founded in 2013 by Petr Pechousek (software engineer) "
                             "- We specialize in Tilt & Turn windows from Europe to USA "
-                            "- Our principles: CARE (customer and planet care), AFFORDABLE QUALITY "
-                            "(high quality at affordable prices), HONESTY (we keep our word), "
-                            "SPEED (fast responses through automation) "
-                            "- We offer energy-efficient windows that outperform domestic products "
-                            "- We operate remotely from Czech Republic serving US customers "
+                            "- Our principles: CARE (customer and planet care), "
+                            "AFFORDABLE QUALITY (high quality at affordable prices), "
+                            "HONESTY (we keep our word), SPEED (fast responses) "
+                            "- We offer energy-efficient windows that outperform "
+                            "domestic products "
+                            "- We operate remotely from Czech Republic "
                             "Write a professional business email in English responding "
-                            "to a found public tender/RFP. The email should be polite, specific, "
-                            "mention our values and USA experience, and ask for missing information "
-                            "needed for proposal preparation. Do NOT suggest in-person meetings "
-                            "or site visits since we operate remotely from Czech Republic."
+                            "to a found public tender/RFP. The email should be polite, "
+                            "specific, mention our values and USA experience, ask for "
+                            "missing information needed for proposal preparation. "
+                            "Do NOT suggest in-person meetings or site visits since "
+                            "we operate remotely from Czech Republic."
                         ),
                     },
                     {"role": "user", "content": prompt},
@@ -125,11 +128,11 @@ class AIService:
                 "Write a business email that:",
                 "1. Politely greets and introduces Dual Action Windows (DAW)",
                 "2. Specifically references this tender/RFP opportunity",
-                "3. Mentions our experience since 2013 delivering European windows to USA",
-                "4. Emphasizes our principles: affordable quality, customer care, fast responses",
+                "3. Mentions our experience since 2013 delivering European windows",
+                "4. Emphasizes our principles: affordable quality, customer care",
                 "5. Highlights energy efficiency and Tilt & Turn technology",
                 "6. Requests additional technical information needed for proposal",
-                "7. Suggests next steps (remote consultation, detailed specifications review)",
+                "7. Suggests next steps (remote consultation, spec review)",
                 "8. Professionally closes with contact information",
                 "",
                 "Email should be max 200 words, professional but friendly tone. "
@@ -153,9 +156,13 @@ Dear Sir/Madam,
 
 We would like to respond to your tender opportunity "{title}"{location_part}.
 
-We are Dual Action Windows (DAW) - a company that has been successfully delivering high-quality European windows and doors to the US market since 2013. Our energy-efficient Tilt & Turn windows outperform domestic products in quality while maintaining competitive pricing.
+We are Dual Action Windows (DAW) - a company that has been successfully
+delivering high-quality European windows and doors to the US market since 2013.
+Our energy-efficient Tilt & Turn windows outperform domestic products in quality
+while maintaining competitive pricing.
 
-Our core principles include customer care, affordable quality, and fast responses through process automation.
+Our core principles include customer care, affordable quality, and fast
+responses through process automation.
 
 To prepare an accurate proposal, we would need the following information:
 
@@ -164,7 +171,8 @@ To prepare an accurate proposal, we would need the following information:
 • Material and energy efficiency class requirements
 • Project timeline and delivery requirements
 
-We would be happy to schedule a remote consultation to review detailed specifications and discuss your project requirements.
+We would be happy to schedule a remote consultation to review detailed
+specifications and discuss your project requirements.
 
 Best regards,
 Dual Action Windows Team
