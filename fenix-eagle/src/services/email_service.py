@@ -423,7 +423,7 @@ class EmailService:
         for i in range(len(tenders)):
             tender = tenders[i]
             ai_email = ai_emails[i]
-            lines.append(f"EMAIL {i+1}: {tender['title'][:60]}{'...' if len(tender['title']) > 60 else ''}")
+            lines.append(f"EMAIL {i + 1}: {tender['title'][:60]}{'...' if len(tender['title']) > 60 else ''}")
             lines.append("-" * 50)
             lines.append("")
             lines.append(ai_email)
@@ -533,6 +533,8 @@ class EmailService:
                 "description": ("Toto je testovací nabídka pro ověření funkčnosti FENIX email notifikací."),
                 "source_url": "https://example.com/test",
                 "contact_info": {
+                    "name": "John Smith",
+                    "organization": "ABC Construction Company",
                     "email": "test@example.com",
                     "phone": "+420 123 456 789",
                 },
