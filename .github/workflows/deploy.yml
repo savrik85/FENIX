@@ -70,18 +70,36 @@ jobs:
             fi
           fi
 
-          # Update .env with secrets
-          sed -i 's/SAM_GOV_API_KEY=.*/SAM_GOV_API_KEY=${{ secrets.SAM_GOV_API_KEY }}/' .env
-          sed -i 's/OPENAI_API_KEY=.*/OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}/' .env
-          sed -i 's/CRAWL4AI_API_KEY=.*/CRAWL4AI_API_KEY=${{ secrets.CRAWL4AI_API_KEY }}/' .env
-          sed -i 's/SHOVELS_AI_API_KEY=.*/SHOVELS_AI_API_KEY=${{ secrets.SHOVELS_AI_API_KEY }}/' .env
+          # Update .env with secrets (only if secrets are set)
+          if [ -n "${{ secrets.SAM_GOV_API_KEY }}" ]; then
+            sed -i 's/SAM_GOV_API_KEY=.*/SAM_GOV_API_KEY=${{ secrets.SAM_GOV_API_KEY }}/' .env
+          fi
+          if [ -n "${{ secrets.OPENAI_API_KEY }}" ]; then
+            sed -i 's/OPENAI_API_KEY=.*/OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}/' .env
+          fi
+          if [ -n "${{ secrets.CRAWL4AI_API_KEY }}" ]; then
+            sed -i 's/CRAWL4AI_API_KEY=.*/CRAWL4AI_API_KEY=${{ secrets.CRAWL4AI_API_KEY }}/' .env
+          fi
+          if [ -n "${{ secrets.SHOVELS_AI_API_KEY }}" ]; then
+            sed -i 's/SHOVELS_AI_API_KEY=.*/SHOVELS_AI_API_KEY=${{ secrets.SHOVELS_AI_API_KEY }}/' .env
+          fi
 
-          # E-mail configuration
-          sed -i 's/SMTP_SERVER=.*/SMTP_SERVER=${{ secrets.SMTP_SERVER }}/' .env
-          sed -i 's/SMTP_PORT=.*/SMTP_PORT=${{ secrets.SMTP_PORT }}/' .env
-          sed -i 's/EMAIL_USERNAME=.*/EMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}/' .env
-          sed -i 's/EMAIL_PASSWORD=.*/EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}/' .env
-          sed -i 's/DEFAULT_NOTIFICATION_EMAIL=.*/DEFAULT_NOTIFICATION_EMAIL=${{ secrets.DEFAULT_NOTIFICATION_EMAIL }}/' .env
+          # E-mail configuration (only if secrets are set)
+          if [ -n "${{ secrets.SMTP_SERVER }}" ]; then
+            sed -i 's/SMTP_SERVER=.*/SMTP_SERVER=${{ secrets.SMTP_SERVER }}/' .env
+          fi
+          if [ -n "${{ secrets.SMTP_PORT }}" ]; then
+            sed -i 's/SMTP_PORT=.*/SMTP_PORT=${{ secrets.SMTP_PORT }}/' .env
+          fi
+          if [ -n "${{ secrets.EMAIL_USERNAME }}" ]; then
+            sed -i 's/EMAIL_USERNAME=.*/EMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}/' .env
+          fi
+          if [ -n "${{ secrets.EMAIL_PASSWORD }}" ]; then
+            sed -i 's/EMAIL_PASSWORD=.*/EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}/' .env
+          fi
+          if [ -n "${{ secrets.DEFAULT_NOTIFICATION_EMAIL }}" ]; then
+            sed -i 's/DEFAULT_NOTIFICATION_EMAIL=.*/DEFAULT_NOTIFICATION_EMAIL=${{ secrets.DEFAULT_NOTIFICATION_EMAIL }}/' .env
+          fi
 
           # Run deployment with modern docker compose
           echo "$(date): Starting FENIX deployment with monitoring..." >> /var/log/fenix-deploy.log
