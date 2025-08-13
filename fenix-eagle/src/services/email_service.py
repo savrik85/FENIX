@@ -9,6 +9,7 @@ from jinja2 import Template
 
 from ..config import settings
 from ..database.models import NotificationLog, get_db
+from .ai_service import AIService
 
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ class EmailService:
         self.username = getattr(settings, "email_username", None)
         self.password = getattr(settings, "email_password", None)
         self.default_email = getattr(settings, "default_notification_email", None)
+        self.ai_service = AIService()
 
     async def send_tender_notification(
         self,
@@ -53,8 +55,8 @@ class EmailService:
 
             # Generate email content
             subject = self._generate_subject(tenders, config_name)
-            html_body = self._generate_html_body(tenders, config_name)
-            text_body = self._generate_text_body(tenders, config_name)
+            html_body = await self._generate_html_body(tenders, config_name)
+            text_body = await self._generate_text_body(tenders, config_name)
 
             # Send email
             success = await self._send_email(
@@ -104,10 +106,16 @@ class EmailService:
         else:
             return f"🔥 {count} nových nabídek oken/dveří ({config_name})"
 
-    def _generate_html_body(
+    async def _generate_html_body(
         self, tenders: list[dict[str, Any]], config_name: str
     ) -> str:
-        """Generate HTML email body"""
+        """Generate HTML email body with data overview and AI-generated business email"""
+        # Generate AI business emails for each tender
+        ai_emails = []
+        for tender in tenders:
+            ai_email = await self.ai_service.generate_business_email(tender)
+            ai_emails.append(ai_email)
+
         template_str = """
         <!DOCTYPE html>
         <html>
@@ -127,6 +135,22 @@ class EmailService:
                     color: white;
                     padding: 20px;
                     text-align: center;
+                    border-radius: 8px;
+                }
+                .section-divider {
+                    margin: 40px 0;
+                    padding: 20px 0;
+                    border-top: 3px solid #3498db;
+                    border-bottom: 1px solid #ecf0f1;
+                }
+                .section-title {
+                    color: #2c3e50;
+                    font-size: 24px;
+                    font-weight: bold;
+                    margin-bottom: 20px;
+                    text-align: center;
+                    background-color: #ecf0f1;
+                    padding: 15px;
                     border-radius: 8px;
                 }
                 .tender-card {
@@ -183,6 +207,35 @@ class EmailService:
                     display: inline-block;
                     margin-top: 10px;
                 }
+                .ai-email-card {
+                    border: 2px solid #27ae60;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                    padding: 20px;
+                    background-color: #f8fff9;
+                }
+                .ai-email-title {
+                    color: #27ae60;
+                    font-size: 16px;
+                    font-weight: bold;
+                    margin-bottom: 15px;
+                    display: flex;
+                    align-items: center;
+                }
+                .ai-email-title:before {
+                    content: "🤖";
+                    margin-right: 10px;
+                    font-size: 20px;
+                }
+                .ai-email-content {
+                    background-color: white;
+                    padding: 20px;
+                    border-radius: 6px;
+                    border-left: 4px solid #27ae60;
+                    white-space: pre-line;
+                    font-family: Georgia, serif;
+                    line-height: 1.8;
+                }
                 .footer {
                     margin-top: 30px;
                     padding-top: 20px;
@@ -200,8 +253,13 @@ class EmailService:
                 <p><strong>Konfigurace:</strong> {{ config_name }}</p>
             </div>
 
+            <!-- SEKCE 1: PŘEHLED ZÍSKANÝCH DAT -->
+            <div class="section-divider">
+                <div class="section-title">📋 ČÁST 1: PŘEHLED ZÍSKANÝCH DAT</div>
+            </div>
+
             <div class="content">
-                <h2>📋 Přehled nabídek ({{ tender_count }})</h2>
+                <p><strong>Celkem nalezeno nabídek:</strong> {{ tender_count }}</p>
 
                 {% for tender in tenders %}
                 <div class="tender-card">
@@ -214,16 +272,14 @@ class EmailService:
                         <strong>Lokalita:</strong> {{ tender.location or 'Nezadáno' }}
                         </span>
                         <span class="meta-item"><strong>Datum:</strong>
-                        {{ tender.posting_date[:10] if tender.posting_date
-                           else 'Nezadáno' }}</span>
+                        {{ tender.posting_date }}</span>
                         {% if tender.estimated_value %}
                         <span class="meta-item"><strong>Hodnota:</strong>
                         ${{ "{:,.0f}".format(tender.estimated_value) }}</span>
                         {% endif %}
                         {% if tender.response_deadline %}
                         <span class="meta-item"><strong>Deadline:</strong>
-                        {{ tender.response_deadline[:10] if tender.response_deadline
-                           else 'Nezadáno' }}</span>
+                        {{ tender.response_deadline }}</span>
                         {% endif %}
                         {% if tender.relevance_score %}
                         <span class="meta-item {{ 'relevance-high' if
@@ -272,10 +328,30 @@ class EmailService:
                 {% endfor %}
             </div>
 
+            <!-- SEKCE 2: AI GENEROVANÉ OBCHODNÍ EMAILY -->
+            <div class="section-divider">
+                <div class="section-title">✉️ ČÁST 2: AI GENEROVANÉ OBCHODNÍ EMAILY</div>
+                <p style="text-align: center; color: #666; font-style: italic;">
+                    Následující emailové obsahy byly automaticky vygenerovány pomocí AI<br>
+                    a jsou připraveny pro použití v produkčním režimu.
+                </p>
+            </div>
+
+            {% for tender, ai_email in zip(tenders, ai_emails) %}
+            <div class="ai-email-card">
+                <div class="ai-email-title">
+                    Obchodní email pro: {{ tender.title[:50] }}{% if tender.title|length > 50 %}...{% endif %}
+                </div>
+                <div class="ai-email-content">
+                    {{ ai_email }}
+                </div>
+            </div>
+            {% endfor %}
+
             <div class="footer">
                 <p>📅 Generováno: {{ timestamp }}</p>
                 <p>🤖 Automaticky generováno systémem FENIX</p>
-                <p>Pro změnu nastavení kontaktujte administrátora</p>
+                <p><strong>TESTOVACÍ REŽIM:</strong> Pro změnu nastavení kontaktujte administrátora</p>
             </div>
         </body>
         </html>
@@ -287,19 +363,31 @@ class EmailService:
             tenders=tenders,
             config_name=config_name,
             tender_count=len(tenders),
+            ai_emails=ai_emails,
             timestamp=datetime.now().strftime("%d.%m.%Y %H:%M"),
         )
 
-    def _generate_text_body(
+    async def _generate_text_body(
         self, tenders: list[dict[str, Any]], config_name: str
     ) -> str:
-        """Generate plain text email body"""
+        """Generate plain text email body with data overview and AI-generated business emails"""
+        # Generate AI business emails for each tender
+        ai_emails = []
+        for tender in tenders:
+            ai_email = await self.ai_service.generate_business_email(tender)
+            ai_emails.append(ai_email)
+
         lines = []
         lines.append("FENIX - Nové příležitosti")
-        lines.append("=" * 30)
+        lines.append("=" * 50)
         lines.append(f"Konfigurace: {config_name}")
         lines.append(f"Nalezeno nabídek: {len(tenders)}")
         lines.append(f"Čas: {datetime.now().strftime('%d.%m.%Y %H:%M')}")
+        lines.append("")
+
+        # SEKCE 1: Přehled získaných dat
+        lines.append("ČÁST 1: PŘEHLED ZÍSKANÝCH DAT")
+        lines.append("=" * 50)
         lines.append("")
 
         for i, tender in enumerate(tenders, 1):
@@ -316,11 +404,39 @@ class EmailService:
             if tender.get("keywords_found"):
                 lines.append(f"   Klíčová slova: {', '.join(tender['keywords_found'])}")
 
+            if tender.get("contact_info"):
+                contact = tender.get("contact_info", {})
+                if contact.get("email"):
+                    lines.append(f"   Email: {contact['email']}")
+                if contact.get("phone"):
+                    lines.append(f"   Telefon: {contact['phone']}")
+
             lines.append(f"   URL: {tender['source_url']}")
             lines.append("")
 
+        # SEKCE 2: AI generované obchodní emaily
+        lines.append("")
+        lines.append("ČÁST 2: AI GENEROVANÉ OBCHODNÍ EMAILY")
+        lines.append("=" * 50)
+        lines.append("Následující emailové obsahy byly automaticky vygenerovány")
+        lines.append("pomocí AI a jsou připraveny pro použití v produkčním režimu.")
+        lines.append("")
+
+        for i, (tender, ai_email) in enumerate(
+            zip(tenders, ai_emails, strict=False), 1
+        ):
+            lines.append(
+                f"EMAIL {i}: {tender['title'][:60]}{'...' if len(tender['title']) > 60 else ''}"
+            )
+            lines.append("-" * 50)
+            lines.append("")
+            lines.append(ai_email)
+            lines.append("")
+            lines.append("-" * 50)
+            lines.append("")
+
         lines.append("---")
-        lines.append("Automaticky generováno systémem FENIX")
+        lines.append("TESTOVACÍ REŽIM: Automaticky generováno systémem FENIX")
 
         return "\n".join(lines)
 
@@ -418,7 +534,7 @@ class EmailService:
                 "title": "Test nabídka - FENIX monitoring",
                 "source": "test",
                 "location": "Prague, Czech Republic",
-                "posting_date": datetime.now(),
+                "posting_date": "2023-12-01",  # Simple string date
                 "estimated_value": 100000,
                 "relevance_score": 0.85,
                 "keywords_found": ["windows", "glazing"],
@@ -431,7 +547,10 @@ class EmailService:
                     "email": "test@example.com",
                     "phone": "+420 123 456 789",
                 },
+                "response_deadline": "2023-12-15",  # Simple string date
             }
+
+            logger.info(f"Test tender data: {test_tender}")
 
             result = await self.send_tender_notification(
                 tenders=[test_tender],
@@ -443,6 +562,9 @@ class EmailService:
 
         except Exception as e:
             logger.error(f"Failed to send test email: {str(e)}")
+            import traceback
+
+            logger.error(f"Full traceback: {traceback.format_exc()}")
             return {"success": False, "error": str(e)}
 
     async def send_empty_report_notification(
