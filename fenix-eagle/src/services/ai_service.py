@@ -63,12 +63,13 @@ class AIService:
                             "specific, mention our values and USA experience, ask for "
                             "missing information needed for proposal preparation. "
                             "Do NOT suggest in-person meetings or site visits since "
-                            "we operate remotely from Czech Republic."
+                            "we operate remotely from Czech Republic. "
+                            "ALWAYS include complete contact information at the end."
                         ),
                     },
                     {"role": "user", "content": prompt},
                 ],
-                max_tokens=500,
+                max_tokens=600,
                 temperature=0.7,
             )
 
@@ -127,10 +128,26 @@ class AIService:
                 "5. Highlights energy efficiency and Tilt & Turn technology",
                 "6. Requests additional technical information needed for proposal",
                 "7. Suggests next steps (remote consultation, spec review)",
-                "8. Professionally closes with contact information",
+                "8. MUST end with complete contact information block:",
                 "",
-                "Email should be max 200 words, professional but friendly tone. "
-                "IMPORTANT: Do NOT suggest in-person meetings or site visits.",
+                "Contact Information to include at the end:",
+                "Dual Action Windows, LLC",
+                "",
+                "US Mailing Address:",
+                "1601-1 N Main St #3159, Jacksonville, FL 32206, USA",
+                "",
+                "European Mailing Address:",
+                "Simackova 908/17, Prague 7, 170 00, Czech Republic",
+                "",
+                "📞 (321) 765-3355",
+                "Call us now – our experts are here to help!",
+                "",
+                "✉️ info@dualactionwindows.com",
+                "Email us – our team is ready to assist you!",
+                "",
+                "Email should be max 250 words, professional but friendly tone. "
+                "IMPORTANT: Do NOT suggest in-person meetings or site visits. "
+                "ALWAYS include the complete contact information block at the end.",
             ]
         )
 
@@ -168,6 +185,22 @@ specifications and discuss your project requirements.
 
 Best regards,
 Dual Action Windows Team
+
+---
+
+Dual Action Windows, LLC
+
+US Mailing Address:
+1601-1 N Main St #3159, Jacksonville, FL 32206, USA
+
+European Mailing Address:
+Simackova 908/17, Prague 7, 170 00, Czech Republic
+
+📞 (321) 765-3355
+Call us now – our experts are here to help!
+
+✉️ info@dualactionwindows.com
+Email us – our team is ready to assist you!
 """.strip()
 
     def get_missing_info_suggestions(self, tender_data: dict[str, Any]) -> list[str]:
