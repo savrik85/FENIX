@@ -62,6 +62,9 @@ class AIService:
                             "to a found public tender/RFP. The email should be polite, "
                             "specific, mention our values and USA experience, ask for "
                             "missing information needed for proposal preparation. "
+                            "PERSONALIZATION: If contact person name is provided, "
+                            "address them directly by name (Dear Mr./Ms. [LastName]). "
+                            "Reference the specific organization if provided. "
                             "Do NOT suggest in-person meetings or site visits since "
                             "we operate remotely from Czech Republic. "
                             "ALWAYS include complete contact information at the end."
@@ -117,18 +120,32 @@ class AIService:
         if context["response_deadline"]:
             prompt_parts.append(f"- Deadline: {context['response_deadline']}")
 
+        # Add contact information if available
+        contact_info = context.get("contact_info", {})
+        if contact_info:
+            prompt_parts.append("- Kontaktní informace:")
+            if contact_info.get("name"):
+                prompt_parts.append(f"  • Jméno: {contact_info['name']}")
+            if contact_info.get("email"):
+                prompt_parts.append(f"  • Email: {contact_info['email']}")
+            if contact_info.get("phone"):
+                prompt_parts.append(f"  • Telefon: {contact_info['phone']}")
+            if contact_info.get("organization"):
+                prompt_parts.append(f"  • Organizace: {contact_info['organization']}")
+
         prompt_parts.extend(
             [
                 "",
                 "Write a business email that:",
                 "1. Politely greets and introduces Dual Action Windows (DAW)",
-                "2. Specifically references this tender/RFP opportunity",
-                "3. Mentions our experience since 2013 delivering European windows",
-                "4. Emphasizes our principles: affordable quality, customer care",
-                "5. Highlights energy efficiency and Tilt & Turn technology",
-                "6. Requests additional technical information needed for proposal",
-                "7. Suggests next steps (remote consultation, spec review)",
-                "8. MUST end with complete contact information block:",
+                "2. If contact name is provided, address the person by name",
+                "3. Specifically references this tender/RFP opportunity",
+                "4. Mentions our experience since 2013 delivering European windows",
+                "5. Emphasizes our principles: affordable quality, customer care",
+                "6. Highlights energy efficiency and Tilt & Turn technology",
+                "7. Requests additional technical information needed for proposal",
+                "8. Suggests next steps (remote consultation, spec review)",
+                "9. MUST end with complete contact information block:",
                 "",
                 "Contact Information to include at the end:",
                 "Dual Action Windows, LLC",
