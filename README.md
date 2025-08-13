@@ -411,3 +411,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 **FENIX - Transforming windows into opportunities with AI** 🔥
 # Force GitHub Actions deployment
+# Test deployment trigger
