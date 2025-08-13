@@ -93,9 +93,9 @@ jobs:
           docker volume create fenix_postgres_data || true
           docker volume create fenix_redis_data || true
 
-          # Build and start services
-          docker compose build
-          docker compose up -d
+          # Build and start services (force rebuild without cache)
+          docker compose build --no-cache
+          docker compose up -d --force-recreate
 
           # Wait for database to be healthy
           echo "$(date): Waiting for database to be healthy..." >> /var/log/fenix-deploy.log

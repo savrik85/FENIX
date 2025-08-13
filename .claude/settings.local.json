@@ -45,7 +45,8 @@
       "Bash(for port in 8000 8001 8025 1025 5433 6380)",
       "Bash(do nc -z localhost $port)",
       "Bash(echo:*)",
-      "Bash(docker exec:*)"
+      "Bash(docker exec:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": []
   }
