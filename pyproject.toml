@@ -11,7 +11,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 
 [tool.ruff]
-line-length = 88
+line-length = 120
 target-version = "py311"
 
 # Exclude a variety of commonly ignored directories.
@@ -68,3 +68,4 @@ lines-after-imports = 2
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10
+

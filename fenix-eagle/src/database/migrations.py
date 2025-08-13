@@ -27,9 +27,7 @@ def create_default_monitoring_config():
 
     try:
         # Check if default config already exists
-        existing = (
-            db.query(MonitoringConfig).filter_by(name="default_windows_doors").first()
-        )
+        existing = db.query(MonitoringConfig).filter_by(name="default_windows_doors").first()
 
         if existing:
             logger.info("Default monitoring config already exists")

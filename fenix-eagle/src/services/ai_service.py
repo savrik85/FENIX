@@ -102,22 +102,16 @@ class AIService:
         ]
 
         if context["estimated_value"]:
-            prompt_parts.append(
-                f"- Odhadovaná hodnota: ${context['estimated_value']:,.0f}"
-            )
+            prompt_parts.append(f"- Odhadovaná hodnota: ${context['estimated_value']:,.0f}")
 
         if context["description"]:
             description = (
-                context["description"][:200] + "..."
-                if len(context["description"]) > 200
-                else context["description"]
+                context["description"][:200] + "..." if len(context["description"]) > 200 else context["description"]
             )
             prompt_parts.append(f"- Popis: {description}")
 
         if context["keywords_found"]:
-            prompt_parts.append(
-                f"- Klíčová slova: {', '.join(context['keywords_found'])}"
-            )
+            prompt_parts.append(f"- Klíčová slova: {', '.join(context['keywords_found'])}")
 
         if context["response_deadline"]:
             prompt_parts.append(f"- Deadline: {context['response_deadline']}")
@@ -147,9 +141,7 @@ class AIService:
         title = tender_data.get("title", "nabídky")
         location = tender_data.get("location", "")
 
-        location_part = (
-            f" v oblasti {location}" if location and location != "Nezadáno" else ""
-        )
+        location_part = f" v oblasti {location}" if location and location != "Nezadáno" else ""
 
         return f"""
 Dear Sir/Madam,

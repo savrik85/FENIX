@@ -27,9 +27,7 @@ class EagleServiceClient:
         """Check if Eagle service is healthy"""
         try:
             if not self.session:
-                self.session = aiohttp.ClientSession(
-                    timeout=aiohttp.ClientTimeout(total=10)
-                )
+                self.session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10))
 
             async with self.session.get(f"{self.eagle_base_url}/health") as response:
                 return response.status == 200
@@ -47,9 +45,7 @@ class EagleServiceClient:
         """Create a scraping job via Eagle service API"""
         try:
             if not self.session:
-                self.session = aiohttp.ClientSession(
-                    timeout=aiohttp.ClientTimeout(total=30)
-                )
+                self.session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30))
 
             payload = {
                 "source": source,
@@ -58,9 +54,7 @@ class EagleServiceClient:
                 "filters": filters or {},
             }
 
-            async with self.session.post(
-                f"{self.eagle_base_url}/scrape/start", json=payload
-            ) as response:
+            async with self.session.post(f"{self.eagle_base_url}/scrape/start", json=payload) as response:
                 if response.status == 200:
                     return await response.json()
                 else:
@@ -75,13 +69,9 @@ class EagleServiceClient:
         """Get job status via Eagle service API"""
         try:
             if not self.session:
-                self.session = aiohttp.ClientSession(
-                    timeout=aiohttp.ClientTimeout(total=10)
-                )
+                self.session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10))
 
-            async with self.session.get(
-                f"{self.eagle_base_url}/scrape/status/{job_id}"
-            ) as response:
+            async with self.session.get(f"{self.eagle_base_url}/scrape/status/{job_id}") as response:
                 if response.status == 200:
                     return await response.json()
                 else:
@@ -95,13 +85,9 @@ class EagleServiceClient:
         """Get job results via Eagle service API"""
         try:
             if not self.session:
-                self.session = aiohttp.ClientSession(
-                    timeout=aiohttp.ClientTimeout(total=10)
-                )
+                self.session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10))
 
-            async with self.session.get(
-                f"{self.eagle_base_url}/scrape/results/{job_id}"
-            ) as response:
+            async with self.session.get(f"{self.eagle_base_url}/scrape/results/{job_id}") as response:
                 if response.status == 200:
                     return await response.json()
                 else:

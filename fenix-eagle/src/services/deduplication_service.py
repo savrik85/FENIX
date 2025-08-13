@@ -14,14 +14,10 @@ class DeduplicationService:
     """Service for detecting and managing duplicate tenders"""
 
     def __init__(self):
-        self.similarity_threshold = getattr(
-            settings, "deduplication_similarity_threshold", 0.8
-        )
+        self.similarity_threshold = getattr(settings, "deduplication_similarity_threshold", 0.8)
         self.max_stored_tenders = getattr(settings, "max_stored_tenders", 10000)
 
-    async def detect_new_tenders(
-        self, scraped_tenders: list[dict[str, Any]]
-    ) -> list[dict[str, Any]]:
+    async def detect_new_tenders(self, scraped_tenders: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         Detect which tenders are truly new (not duplicates)
 
@@ -44,9 +40,7 @@ class DeduplicationService:
                 else:
                     logger.debug(f"Duplicate found: {tender.get('title', 'Unknown')}")
 
-            logger.info(
-                f"Found {len(new_tenders)} new tenders out of {len(scraped_tenders)}"
-            )
+            logger.info(f"Found {len(new_tenders)} new tenders out of {len(scraped_tenders)}")
 
             return new_tenders
 
@@ -71,11 +65,7 @@ class DeduplicationService:
         try:
             # Method 1: Exact match by source_url
             if tender.get("source_url"):
-                existing_by_url = (
-                    db.query(StoredTender)
-                    .filter(StoredTender.source_url == tender["source_url"])
-                    .first()
-                )
+                existing_by_url = db.query(StoredTender).filter(StoredTender.source_url == tender["source_url"]).first()
 
                 if existing_by_url:
                     logger.debug(f"Duplicate found by URL: {tender['source_url']}")
@@ -83,11 +73,7 @@ class DeduplicationService:
 
             # Method 2: Exact match by tender_id (if available)
             if tender.get("tender_id"):
-                existing_by_id = (
-                    db.query(StoredTender)
-                    .filter(StoredTender.tender_id == tender["tender_id"])
-                    .first()
-                )
+                existing_by_id = db.query(StoredTender).filter(StoredTender.tender_id == tender["tender_id"]).first()
 
                 if existing_by_id:
                     logger.debug(f"Duplicate found by ID: {tender['tender_id']}")
@@ -127,9 +113,7 @@ class DeduplicationService:
                 db.query(StoredTender)
                 .filter(
                     StoredTender.source == source,
-                    StoredTender.title.ilike(
-                        f"%{title.split()[0]}%"
-                    ),  # Basic keyword match
+                    StoredTender.title.ilike(f"%{title.split()[0]}%"),  # Basic keyword match
                 )
                 .limit(50)
                 .all()
@@ -137,10 +121,7 @@ class DeduplicationService:
 
             # Check similarity with each candidate
             for candidate in similar_candidates:
-                if (
-                    self._calculate_similarity(tender, candidate)
-                    > self.similarity_threshold
-                ):
+                if self._calculate_similarity(tender, candidate) > self.similarity_threshold:
                     logger.debug(f"Similar tender found: {candidate.title}")
                     return True
 
@@ -150,9 +131,7 @@ class DeduplicationService:
             logger.error(f"Error checking similarity: {str(e)}")
             return False
 
-    def _calculate_similarity(
-        self, tender1: dict[str, Any], tender2: StoredTender
-    ) -> float:
+    def _calculate_similarity(self, tender1: dict[str, Any], tender2: StoredTender) -> float:
         """
         Calculate similarity score between two tenders
 
@@ -197,9 +176,7 @@ class DeduplicationService:
             logger.error(f"Error calculating similarity: {str(e)}")
             return 0.0
 
-    async def store_new_tenders(
-        self, new_tenders: list[dict[str, Any]]
-    ) -> list[StoredTender]:
+    async def store_new_tenders(self, new_tenders: list[dict[str, Any]]) -> list[StoredTender]:
         """
         Store new tenders in the database
 
@@ -224,12 +201,8 @@ class DeduplicationService:
                         description=tender_data.get("description", ""),
                         source=tender_data.get("source", ""),
                         source_url=tender_data.get("source_url", ""),
-                        posting_date=self._parse_datetime(
-                            tender_data.get("posting_date")
-                        ),
-                        response_deadline=self._parse_datetime(
-                            tender_data.get("response_deadline")
-                        ),
+                        posting_date=self._parse_datetime(tender_data.get("posting_date")),
+                        response_deadline=self._parse_datetime(tender_data.get("response_deadline")),
                         estimated_value=tender_data.get("estimated_value"),
                         location=tender_data.get("location"),
                         naics_codes=tender_data.get("naics_codes", []),
@@ -365,9 +338,7 @@ class DeduplicationService:
         finally:
             db.close()
 
-    async def update_tender_notification_status(
-        self, tender_ids: list[str], is_notified: bool = True
-    ):
+    async def update_tender_notification_status(self, tender_ids: list[str], is_notified: bool = True):
         """
         Update notification status for tenders
 
@@ -378,9 +349,9 @@ class DeduplicationService:
         db = next(get_db())
 
         try:
-            db.query(StoredTender).filter(
-                StoredTender.tender_id.in_(tender_ids)
-            ).update({"is_notified": is_notified}, synchronize_session=False)
+            db.query(StoredTender).filter(StoredTender.tender_id.in_(tender_ids)).update(
+                {"is_notified": is_notified}, synchronize_session=False
+            )
 
             db.commit()
             logger.info(f"Updated notification status for {len(tender_ids)} tenders")
@@ -404,9 +375,7 @@ class DeduplicationService:
         try:
             # Get counts by source
             source_counts = (
-                db.query(
-                    StoredTender.source, db.func.count(StoredTender.id).label("count")
-                )
+                db.query(StoredTender.source, db.func.count(StoredTender.id).label("count"))
                 .group_by(StoredTender.source)
                 .all()
             )
@@ -415,11 +384,7 @@ class DeduplicationService:
             avg_relevance = db.query(db.func.avg(StoredTender.relevance_score)).scalar()
 
             # Get notification statistics
-            notified_count = (
-                db.query(StoredTender)
-                .filter(StoredTender.is_notified.is_(True))
-                .count()
-            )
+            notified_count = db.query(StoredTender).filter(StoredTender.is_notified.is_(True)).count()
 
             total_count = db.query(StoredTender).count()
 
@@ -427,9 +392,7 @@ class DeduplicationService:
                 "total_tenders": total_count,
                 "notified_tenders": notified_count,
                 "pending_notifications": total_count - notified_count,
-                "average_relevance_score": float(avg_relevance)
-                if avg_relevance
-                else 0.0,
+                "average_relevance_score": float(avg_relevance) if avg_relevance else 0.0,
                 "source_distribution": dict(source_counts),
                 "similarity_threshold": self.similarity_threshold,
                 "max_stored_tenders": self.max_stored_tenders,

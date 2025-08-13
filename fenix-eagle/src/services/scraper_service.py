@@ -95,9 +95,7 @@ class ScraperService:
             # Store results
             self.results[job_id] = results
 
-            logger.info(
-                f"Completed scraping job {job_id}, found {len(results)} results"
-            )
+            logger.info(f"Completed scraping job {job_id}, found {len(results)} results")
 
         except Exception as e:
             logger.error(f"Error in scraping job {job_id}: {str(e)}")
@@ -131,9 +129,7 @@ class ScraperService:
         try:
             if self.crawl4ai_scraper:
                 # Use real Crawl4AI scraping
-                results = await self.crawl4ai_scraper.scrape_sam_gov(
-                    keywords=job.keywords, max_results=job.max_results
-                )
+                results = await self.crawl4ai_scraper.scrape_sam_gov(keywords=job.keywords, max_results=job.max_results)
                 logger.info(f"Crawl4AI returned {len(results)} results")
                 return results
             else:
@@ -156,9 +152,7 @@ class ScraperService:
             TenderData(
                 id=str(uuid.uuid4()),
                 title="Storefront Installation - Retail Complex",
-                description=(
-                    "Install storefront windows and doors for new retail development"
-                ),
+                description=("Install storefront windows and doors for new retail development"),
                 source=TenderSource.DODGE,
                 source_url="https://dodge.construction/project/67890",
                 posting_date=datetime.now() - timedelta(hours=6),
@@ -182,9 +176,7 @@ class ScraperService:
                 results = await self.crawl4ai_scraper.scrape_construction_com(
                     keywords=job.keywords, max_results=job.max_results
                 )
-                logger.info(
-                    f"Construction.com Crawl4AI returned {len(results)} results"
-                )
+                logger.info(f"Construction.com Crawl4AI returned {len(results)} results")
                 return results
             else:
                 logger.error("Crawl4AI scraper not available")

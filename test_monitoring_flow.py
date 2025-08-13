@@ -34,9 +34,7 @@ async def test_single_scraping_job():
 
     async with EagleServiceClient() as client:
         # Create a simple job
-        job_response = await client.create_scraping_job(
-            source="sam.gov", keywords=["windows"], max_results=1
-        )
+        job_response = await client.create_scraping_job(source="sam.gov", keywords=["windows"], max_results=1)
 
         if not job_response:
             print("❌ Failed to create scraping job")

@@ -102,9 +102,7 @@ async def _daily_tender_scan_async():
                 }
 
             # Get all active monitoring configurations
-            monitoring_configs = (
-                db.query(MonitoringConfig).filter_by(is_active=True).all()
-            )
+            monitoring_configs = db.query(MonitoringConfig).filter_by(is_active=True).all()
 
             if not monitoring_configs:
                 logger.warning("No active monitoring configurations found")
@@ -138,9 +136,7 @@ async def _daily_tender_scan_async():
                             continue
 
                         job_id = job_response.get("job_id")
-                        logger.info(
-                            f"Created scraping job {job_id} for source {source}"
-                        )
+                        logger.info(f"Created scraping job {job_id} for source {source}")
 
                         # Wait for job completion (with timeout)
                         job_status = await http_client.wait_for_job_completion(
@@ -161,15 +157,11 @@ async def _daily_tender_scan_async():
                             relevant_tenders = [
                                 tender
                                 for tender in results["tenders"]
-                                if (tender.get("relevance_score") or 0)
-                                >= getattr(settings, "min_relevance_score", 0.3)
+                                if (tender.get("relevance_score") or 0) >= getattr(settings, "min_relevance_score", 0.3)
                             ]
 
                             config_new_tenders.extend(relevant_tenders)
-                            logger.info(
-                                f"Found {len(relevant_tenders)} relevant tenders "
-                                f"from {source}"
-                            )
+                            logger.info(f"Found {len(relevant_tenders)} relevant tenders from {source}")
 
                     except Exception as e:
                         logger.error(f"Error scraping {source}: {str(e)}")
@@ -187,9 +179,7 @@ async def _daily_tender_scan_async():
 
                 # Deduplicate tenders
                 if config_new_tenders:
-                    new_tenders = await deduplication_service.detect_new_tenders(
-                        config_new_tenders
-                    )
+                    new_tenders = await deduplication_service.detect_new_tenders(config_new_tenders)
 
                     if new_tenders:
                         # Store new tenders
@@ -198,24 +188,18 @@ async def _daily_tender_scan_async():
                         # Send email notification
                         if config.email_recipients:
                             try:
-                                email_result = (
-                                    await email_service.send_tender_notification(
-                                        tenders=new_tenders,
-                                        recipients=config.email_recipients,
-                                        config_name=config.name,
-                                    )
+                                email_result = await email_service.send_tender_notification(
+                                    tenders=new_tenders,
+                                    recipients=config.email_recipients,
+                                    config_name=config.name,
                                 )
                                 if email_result.get("success"):
                                     count = len(config.email_recipients)
                                     logger.info(f"Email sent to {count} recipients")
                                 else:
-                                    logger.error(
-                                        f"Email failed: {email_result.get('error')}"
-                                    )
+                                    logger.error(f"Email failed: {email_result.get('error')}")
                             except Exception as e:
-                                logger.error(
-                                    f"Failed to send email notification: {str(e)}"
-                                )
+                                logger.error(f"Failed to send email notification: {str(e)}")
 
                         total_new_tenders += len(new_tenders)
                         scan_results.append(
@@ -226,10 +210,7 @@ async def _daily_tender_scan_async():
                             }
                         )
 
-                        logger.info(
-                            f"Found {len(new_tenders)} new tenders for "
-                            f"config {config.name}"
-                        )
+                        logger.info(f"Found {len(new_tenders)} new tenders for config {config.name}")
                     else:
                         # Check if we should send empty report for this config
                         if (
@@ -238,17 +219,15 @@ async def _daily_tender_scan_async():
                             and config.email_recipients
                         ):
                             try:
-                                empty_report_result = (
-                                    await email_service.send_empty_report_notification(
-                                        recipients=config.email_recipients,
-                                        config_name=config.name,
-                                        scan_results=[
-                                            {
-                                                "config": config.name,
-                                                "sources_scanned": len(config.sources),
-                                            }
-                                        ],
-                                    )
+                                empty_report_result = await email_service.send_empty_report_notification(
+                                    recipients=config.email_recipients,
+                                    config_name=config.name,
+                                    scan_results=[
+                                        {
+                                            "config": config.name,
+                                            "sources_scanned": len(config.sources),
+                                        }
+                                    ],
                                 )
                                 if empty_report_result.get("success"):
                                     logger.info("Empty report sent successfully")
@@ -256,9 +235,7 @@ async def _daily_tender_scan_async():
                                     error_msg = empty_report_result.get("error")
                                     logger.error(f"Empty report failed: {error_msg}")
                             except Exception as e:
-                                logger.error(
-                                    f"Failed to send empty report: {str(e)}"
-                                )
+                                logger.error(f"Failed to send empty report: {str(e)}")
 
                         # Add scan results even when no new tenders found
                         scan_results.append(
@@ -277,10 +254,7 @@ async def _daily_tender_scan_async():
                 "scan_results": scan_results,
             }
 
-            logger.info(
-                f"Daily scan completed successfully: {total_new_tenders} "
-                f"new tenders found"
-            )
+            logger.info(f"Daily scan completed successfully: {total_new_tenders} new tenders found")
             return result
 
     except Exception as e:
@@ -328,23 +302,18 @@ async def _cleanup_old_data_async():
         # Define cleanup thresholds
         tender_retention_days = getattr(settings, "tender_retention_days", 90)
         job_retention_days = getattr(settings, "job_retention_days", 30)
-        notification_retention_days = getattr(
-            settings, "notification_retention_days", 60
-        )
+        notification_retention_days = getattr(settings, "notification_retention_days", 60)
 
         cutoff_date_tenders = datetime.now() - timedelta(days=tender_retention_days)
         cutoff_date_jobs = datetime.now() - timedelta(days=job_retention_days)
-        cutoff_date_notifications = datetime.now() - timedelta(
-            days=notification_retention_days
-        )
+        cutoff_date_notifications = datetime.now() - timedelta(days=notification_retention_days)
 
         # Clean up old tenders (keep only recent and high-relevance ones)
         old_tenders = (
             db.query(StoredTender)
             .filter(
                 StoredTender.created_at < cutoff_date_tenders,
-                StoredTender.relevance_score
-                < 0.7,  # Keep high-relevance tenders longer
+                StoredTender.relevance_score < 0.7,  # Keep high-relevance tenders longer
             )
             .count()
         )
@@ -355,26 +324,20 @@ async def _cleanup_old_data_async():
         ).delete(synchronize_session=False)
 
         # Clean up old scraping jobs
-        old_jobs = (
-            db.query(ScrapingJobRecord)
-            .filter(ScrapingJobRecord.created_at < cutoff_date_jobs)
-            .count()
-        )
+        old_jobs = db.query(ScrapingJobRecord).filter(ScrapingJobRecord.created_at < cutoff_date_jobs).count()
 
-        db.query(ScrapingJobRecord).filter(
-            ScrapingJobRecord.created_at < cutoff_date_jobs
-        ).delete(synchronize_session=False)
+        db.query(ScrapingJobRecord).filter(ScrapingJobRecord.created_at < cutoff_date_jobs).delete(
+            synchronize_session=False
+        )
 
         # Clean up old notification logs
         old_notifications = (
-            db.query(NotificationLog)
-            .filter(NotificationLog.sent_at < cutoff_date_notifications)
-            .count()
+            db.query(NotificationLog).filter(NotificationLog.sent_at < cutoff_date_notifications).count()
         )
 
-        db.query(NotificationLog).filter(
-            NotificationLog.sent_at < cutoff_date_notifications
-        ).delete(synchronize_session=False)
+        db.query(NotificationLog).filter(NotificationLog.sent_at < cutoff_date_notifications).delete(
+            synchronize_session=False
+        )
 
         db.commit()
 

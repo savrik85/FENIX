@@ -106,10 +106,8 @@ class EmailService:
         else:
             return f"🔥 {count} nových nabídek oken/dveří ({config_name})"
 
-    async def _generate_html_body(
-        self, tenders: list[dict[str, Any]], config_name: str
-    ) -> str:
-        """Generate HTML email body with data overview and AI-generated business email"""
+    async def _generate_html_body(self, tenders: list[dict[str, Any]], config_name: str) -> str:
+        """Generate HTML email body with data overview and AI-generated emails"""
         # Generate AI business emails for each tender
         ai_emails = []
         for tender in tenders:
@@ -332,7 +330,7 @@ class EmailService:
             <div class="section-divider">
                 <div class="section-title">✉️ ČÁST 2: AI GENEROVANÉ OBCHODNÍ EMAILY</div>
                 <p style="text-align: center; color: #666; font-style: italic;">
-                    Následující emailové obsahy byly automaticky vygenerovány pomocí AI<br>
+                    Následující emailové obsahy byly automaticky vygenerovány AI<br>
                     a jsou připraveny pro použití v produkčním režimu.
                 </p>
             </div>
@@ -367,9 +365,7 @@ class EmailService:
             timestamp=datetime.now().strftime("%d.%m.%Y %H:%M"),
         )
 
-    async def _generate_text_body(
-        self, tenders: list[dict[str, Any]], config_name: str
-    ) -> str:
+    async def _generate_text_body(self, tenders: list[dict[str, Any]], config_name: str) -> str:
         """Generate plain text email body with data overview and AI-generated business emails"""
         # Generate AI business emails for each tender
         ai_emails = []
@@ -422,12 +418,8 @@ class EmailService:
         lines.append("pomocí AI a jsou připraveny pro použití v produkčním režimu.")
         lines.append("")
 
-        for i, (tender, ai_email) in enumerate(
-            zip(tenders, ai_emails, strict=False), 1
-        ):
-            lines.append(
-                f"EMAIL {i}: {tender['title'][:60]}{'...' if len(tender['title']) > 60 else ''}"
-            )
+        for i, (tender, ai_email) in enumerate(zip(tenders, ai_emails, strict=False), 1):
+            lines.append(f"EMAIL {i}: {tender['title'][:60]}{'...' if len(tender['title']) > 60 else ''}")
             lines.append("-" * 50)
             lines.append("")
             lines.append(ai_email)
@@ -440,15 +432,11 @@ class EmailService:
 
         return "\n".join(lines)
 
-    async def _send_email(
-        self, recipients: list[str], subject: str, html_body: str, text_body: str
-    ) -> bool:
+    async def _send_email(self, recipients: list[str], subject: str, html_body: str, text_body: str) -> bool:
         """Send email using SMTP"""
         try:
             # For localhost/mailhog testing, credentials are optional
-            if self.smtp_server not in ["localhost", "mailhog"] and (
-                not self.username or not self.password
-            ):
+            if self.smtp_server not in ["localhost", "mailhog"] and (not self.username or not self.password):
                 logger.error("Email credentials not configured")
                 return False
 
@@ -538,10 +526,7 @@ class EmailService:
                 "estimated_value": 100000,
                 "relevance_score": 0.85,
                 "keywords_found": ["windows", "glazing"],
-                "description": (
-                    "Toto je testovací nabídka pro ověření funkčnosti "
-                    "FENIX email notifikací."
-                ),
+                "description": ("Toto je testovací nabídka pro ověření funkčnosti FENIX email notifikací."),
                 "source_url": "https://example.com/test",
                 "contact_info": {
                     "email": "test@example.com",
@@ -612,9 +597,7 @@ class EmailService:
             logger.error(f"Failed to send empty report notification: {str(e)}")
             return {"success": False, "error": str(e)}
 
-    def _generate_empty_report_html(
-        self, config_name: str, scan_results: list[dict] = None
-    ) -> str:
+    def _generate_empty_report_html(self, config_name: str, scan_results: list[dict] = None) -> str:
         """Generate HTML for empty report email"""
         template_str = """
         <!DOCTYPE html>
@@ -712,9 +695,7 @@ class EmailService:
             timestamp=datetime.now().strftime("%d.%m.%Y %H:%M"),
         )
 
-    def _generate_empty_report_text(
-        self, config_name: str, scan_results: list[dict] = None
-    ) -> str:
+    def _generate_empty_report_text(self, config_name: str, scan_results: list[dict] = None) -> str:
         """Generate plain text for empty report email"""
         lines = []
         lines.append("FENIX - Monitoring Report")

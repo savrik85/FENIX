@@ -63,9 +63,7 @@ class Crawl4AIScraper:
         if self.session:
             await self.session.close()
 
-    async def scrape_sam_gov(
-        self, keywords: list[str], max_results: int = 100
-    ) -> list[TenderData]:
+    async def scrape_sam_gov(self, keywords: list[str], max_results: int = 100) -> list[TenderData]:
         """Scrape SAM.gov for contracting opportunities using API-first approach"""
         logger.info(f"Starting SAM.gov API scraping with keywords: {keywords}")
 
@@ -82,9 +80,7 @@ class Crawl4AIScraper:
 
                 # Fallback to Crawl4AI only if API fails and AI processing is needed
                 if self.crawler and CRAWL4AI_AVAILABLE:
-                    logger.info(
-                        "Trying Crawl4AI as fallback for enhanced data extraction"
-                    )
+                    logger.info("Trying Crawl4AI as fallback for enhanced data extraction")
                     return await self._scrape_with_crawl4ai(api_url, keywords)
                 else:
                     logger.error("Crawl4AI not available and API failed")
@@ -95,9 +91,7 @@ class Crawl4AIScraper:
             # Return empty list instead of mock data
             return []
 
-    async def scrape_construction_com(
-        self, keywords: list[str], max_results: int = 100
-    ) -> list[TenderData]:
+    async def scrape_construction_com(self, keywords: list[str], max_results: int = 100) -> list[TenderData]:
         """Scrape Construction.com using Crawl4AI for construction opportunities"""
         logger.info(f"Starting Construction.com scraping with keywords: {keywords}")
 
@@ -108,9 +102,7 @@ class Crawl4AIScraper:
 
             # Use Crawl4AI for intelligent extraction
             if self.crawler and CRAWL4AI_AVAILABLE:
-                return await self._scrape_construction_com_with_crawl4ai(
-                    search_url, keywords
-                )
+                return await self._scrape_construction_com_with_crawl4ai(search_url, keywords)
             else:
                 logger.error("Crawl4AI not available for Construction.com scraping")
                 return []
@@ -153,9 +145,7 @@ class Crawl4AIScraper:
 
         return f"{base_url}?{urlencode(params)}"
 
-    async def _scrape_sam_gov_api_direct(
-        self, url: str, keywords: list[str]
-    ) -> list[TenderData]:
+    async def _scrape_sam_gov_api_direct(self, url: str, keywords: list[str]) -> list[TenderData]:
         """Direct API access to SAM.gov - fastest method"""
         logger.info("Using direct SAM.gov API access")
 
@@ -180,9 +170,7 @@ class Crawl4AIScraper:
         except Exception as e:
             raise Exception(f"Direct API access error: {e}") from e
 
-    async def _scrape_with_crawl4ai(
-        self, url: str, keywords: list[str]
-    ) -> list[TenderData]:
+    async def _scrape_with_crawl4ai(self, url: str, keywords: list[str]) -> list[TenderData]:
         """Scrape using Crawl4AI with AI extraction"""
         logger.info("Using Crawl4AI for intelligent scraping")
 
@@ -251,9 +239,7 @@ class Crawl4AIScraper:
 
             if result.extracted_content:
                 extracted_data = json.loads(result.extracted_content)
-                return self._convert_to_tender_data(
-                    extracted_data.get("opportunities", []), keywords
-                )
+                return self._convert_to_tender_data(extracted_data.get("opportunities", []), keywords)
             else:
                 logger.warning("No content extracted with Crawl4AI")
                 return []
@@ -262,9 +248,7 @@ class Crawl4AIScraper:
             logger.error(f"Crawl4AI extraction failed: {e}")
             return []
 
-    async def _scrape_construction_com_with_crawl4ai(
-        self, url: str, keywords: list[str]
-    ) -> list[TenderData]:
+    async def _scrape_construction_com_with_crawl4ai(self, url: str, keywords: list[str]) -> list[TenderData]:
         """Scrape Construction.com using Crawl4AI with construction-specific
         extraction"""
         logger.info("Using Crawl4AI for Construction.com intelligent scraping")
@@ -360,22 +344,16 @@ class Crawl4AIScraper:
 
             if result.extracted_content:
                 extracted_data = json.loads(result.extracted_content)
-                return self._convert_construction_com_to_tender_data(
-                    extracted_data.get("projects", []), keywords
-                )
+                return self._convert_construction_com_to_tender_data(extracted_data.get("projects", []), keywords)
             else:
-                logger.warning(
-                    "No content extracted from Construction.com with Crawl4AI"
-                )
+                logger.warning("No content extracted from Construction.com with Crawl4AI")
                 return []
 
         except Exception as e:
             logger.error(f"Construction.com Crawl4AI extraction failed: {e}")
             return []
 
-    async def scrape_nyc_opendata(
-        self, keywords: list[str], max_results: int = 100
-    ) -> list[TenderData]:
+    async def scrape_nyc_opendata(self, keywords: list[str], max_results: int = 100) -> list[TenderData]:
         """Scrape NYC Open Data for building permits using DOB Job
         Application Filings API"""
         logger.info(f"Starting NYC DOB scraping with keywords: {keywords}")
@@ -427,11 +405,7 @@ class Crawl4AIScraper:
 
                 # Build title from job type and status
                 work_type = job.get("work_type", "")
-                title = (
-                    f"{job_type} Application - {work_type}"
-                    if work_type
-                    else f"{job_type} Application"
-                )
+                title = f"{job_type} Application - {work_type}" if work_type else f"{job_type} Application"
 
                 # Build description from available fields
                 building_type = job.get("building_type", "")
@@ -463,8 +437,7 @@ class Crawl4AIScraper:
 
                 # Extract applicant info
                 applicant_name = (
-                    f"{job.get('applicant_s_first_name', '')} "
-                    f"{job.get('applicant_s_last_name', '')}"
+                    f"{job.get('applicant_s_first_name', '')} {job.get('applicant_s_last_name', '')}"
                 ).strip()
                 applicant_title = job.get("applicant_professional_title", "")
                 applicant_license = job.get("applicant_license__", "")
@@ -522,9 +495,7 @@ class Crawl4AIScraper:
         logger.info(f"Successfully converted {len(result)} relevant NYC DOB jobs")
         return result
 
-    async def scrape_shovels_ai(
-        self, keywords: list[str], max_results: int = 100
-    ) -> list[TenderData]:
+    async def scrape_shovels_ai(self, keywords: list[str], max_results: int = 100) -> list[TenderData]:
         """Scrape Shovels AI for building permits and contractor data"""
         logger.info(f"Starting Shovels AI API scraping with keywords: {keywords}")
 
@@ -564,24 +535,16 @@ class Crawl4AIScraper:
             logger.info(f"Shovels AI API params: {params}")
             logger.info(f"Shovels AI API URL: {api_url}")
 
-            async with self.session.get(
-                api_url, headers=headers, params=params
-            ) as response:
+            async with self.session.get(api_url, headers=headers, params=params) as response:
                 if response.status == 401:
                     logger.error("Shovels AI API authentication failed - check API key")
                     return []
                 elif response.status != 200:
                     try:
                         error_text = await response.text()
-                        logger.error(
-                            f"Shovels AI API returned status {response.status}: "
-                            f"{error_text}"
-                        )
+                        logger.error(f"Shovels AI API returned status {response.status}: {error_text}")
                     except Exception as e:
-                        logger.error(
-                            f"Shovels AI API returned status {response.status}, "
-                            f"error reading response: {e}"
-                        )
+                        logger.error(f"Shovels AI API returned status {response.status}, error reading response: {e}")
                     return []
 
                 data = await response.json()
@@ -596,9 +559,7 @@ class Crawl4AIScraper:
             logger.error(f"Shovels AI API scraping failed: {e}")
             return []
 
-    def _convert_shovels_permits_to_tender_data(
-        self, permits: list[dict], keywords: list[str]
-    ) -> list[TenderData]:
+    def _convert_shovels_permits_to_tender_data(self, permits: list[dict], keywords: list[str]) -> list[TenderData]:
         """Convert Shovels AI permit data to TenderData format"""
         logger.info(f"Converting {len(permits)} Shovels AI permits to TenderData")
 
@@ -612,11 +573,7 @@ class Crawl4AIScraper:
                 # Build title from type and subtype
                 permit_type = permit.get("type", "")
                 permit_subtype = permit.get("subtype", "")
-                title = (
-                    f"{permit_type} - {permit_subtype}"
-                    if permit_subtype
-                    else permit_type
-                )
+                title = f"{permit_type} - {permit_subtype}" if permit_subtype else permit_type
 
                 # Get description from work description
                 description = permit.get("work_description", "")
@@ -646,9 +603,7 @@ class Crawl4AIScraper:
                 relevance_score = self._calculate_relevance(title, work_desc, keywords)
 
                 # Build permit URL (if available)
-                permit_url = permit.get(
-                    "url", f"https://api.shovels.ai/permits/{permit_id}"
-                )
+                permit_url = permit.get("url", f"https://api.shovels.ai/permits/{permit_id}")
 
                 tender = TenderData(
                     id=str(uuid.uuid4()),
@@ -693,14 +648,10 @@ class Crawl4AIScraper:
                 logger.error(f"Error converting Shovels AI permit: {e}")
                 continue
 
-        logger.info(
-            f"Successfully converted {len(tenders)} relevant Shovels AI permits"
-        )
+        logger.info(f"Successfully converted {len(tenders)} relevant Shovels AI permits")
         return tenders
 
-    def _parse_sam_gov_api_response(
-        self, data: dict, keywords: list[str]
-    ) -> list[TenderData]:
+    def _parse_sam_gov_api_response(self, data: dict, keywords: list[str]) -> list[TenderData]:
         """Parse SAM.gov API JSON response"""
         logger.info("Parsing SAM.gov API response")
 
@@ -714,35 +665,21 @@ class Crawl4AIScraper:
         for item in results:
             try:
                 # Extract opportunity data
-                title = item.get(
-                    "title", item.get("solicitation_title", "Unknown Title")
-                )
-                description = item.get(
-                    "description", item.get("solicitation_description", "")
-                )
+                title = item.get("title", item.get("solicitation_title", "Unknown Title"))
+                description = item.get("description", item.get("solicitation_description", ""))
 
                 # Parse dates
-                posted_date = self._parse_date(
-                    item.get("postedDate", item.get("posted_date"))
-                )
-                response_deadline = self._parse_date(
-                    item.get("responseDeadLine", item.get("response_deadline"))
-                )
+                posted_date = self._parse_date(item.get("postedDate", item.get("posted_date")))
+                response_deadline = self._parse_date(item.get("responseDeadLine", item.get("response_deadline")))
 
                 # Build opportunity URL
-                solicitation_number = item.get(
-                    "solicitationNumber", item.get("solicitation_number", "")
-                )
+                solicitation_number = item.get("solicitationNumber", item.get("solicitation_number", ""))
                 opportunity_url = (
-                    f"https://sam.gov/opp/{solicitation_number}"
-                    if solicitation_number
-                    else "https://sam.gov"
+                    f"https://sam.gov/opp/{solicitation_number}" if solicitation_number else "https://sam.gov"
                 )
 
                 # Calculate relevance score
-                relevance_score = self._calculate_relevance(
-                    title, description, keywords
-                )
+                relevance_score = self._calculate_relevance(title, description, keywords)
 
                 tender = TenderData(
                     id=str(uuid.uuid4()),
@@ -752,16 +689,10 @@ class Crawl4AIScraper:
                     source_url=opportunity_url,
                     posting_date=posted_date,
                     response_deadline=response_deadline,
-                    estimated_value=self._parse_value(
-                        item.get("estimatedValue", item.get("estimated_value"))
-                    ),
-                    location=self._extract_location(
-                        item.get("placeOfPerformance", item.get("location", ""))
-                    ),
+                    estimated_value=self._parse_value(item.get("estimatedValue", item.get("estimated_value"))),
+                    location=self._extract_location(item.get("placeOfPerformance", item.get("location", ""))),
                     naics_codes=self._extract_naics_codes(item),
-                    keywords_found=self._find_keywords_in_text(
-                        title + " " + description, keywords
-                    ),
+                    keywords_found=self._find_keywords_in_text(title + " " + description, keywords),
                     relevance_score=relevance_score,
                     contact_info=self._extract_contact_info(item),
                     requirements=[],
@@ -801,16 +732,13 @@ class Crawl4AIScraper:
         for selector in opportunity_selectors:
             items = soup.select(selector)
             if items:
-                logger.info(
-                    f"Found {len(items)} opportunities with selector: {selector}"
-                )
+                logger.info(f"Found {len(items)} opportunities with selector: {selector}")
                 break
 
         if not items:
             # Fallback: look for any element containing opportunity-like text
             items = soup.find_all(
-                text=lambda text: text
-                and any(keyword.lower() in text.lower() for keyword in keywords)
+                text=lambda text: text and any(keyword.lower() in text.lower() for keyword in keywords)
             )
             logger.info(f"Fallback: found {len(items)} text matches")
 
@@ -881,9 +809,7 @@ class Crawl4AIScraper:
 
         try:
             # Remove currency symbols and commas
-            clean_value = (
-                str(value_str).replace("$", "").replace(",", "").replace(" ", "")
-            )
+            clean_value = str(value_str).replace("$", "").replace(",", "").replace(" ", "")
             return float(clean_value)
         except (ValueError, TypeError):
             return None
@@ -930,9 +856,7 @@ class Crawl4AIScraper:
 
         return found
 
-    def _calculate_relevance(
-        self, title: str, description: str, keywords: list[str]
-    ) -> float:
+    def _calculate_relevance(self, title: str, description: str, keywords: list[str]) -> float:
         """Calculate relevance score based on keyword matches"""
         text = f"{title} {description}".lower()
 
@@ -1018,13 +942,9 @@ class Crawl4AIScraper:
 
         return max(0.0, min(score, 1.0))
 
-    def _convert_construction_com_to_tender_data(
-        self, projects: list[dict], keywords: list[str]
-    ) -> list[TenderData]:
+    def _convert_construction_com_to_tender_data(self, projects: list[dict], keywords: list[str]) -> list[TenderData]:
         """Convert Construction.com project data to TenderData format"""
-        logger.info(
-            f"Converting {len(projects)} Construction.com projects to TenderData"
-        )
+        logger.info(f"Converting {len(projects)} Construction.com projects to TenderData")
 
         tenders = []
         for project in projects:
@@ -1047,9 +967,7 @@ class Crawl4AIScraper:
                 specs = project.get("specifications", "")
                 full_text = f"{title} {description} {specs}"
 
-                relevance_score = self._calculate_relevance(
-                    title, description, keywords
-                )
+                relevance_score = self._calculate_relevance(title, description, keywords)
 
                 # Extract contact info
                 contact_raw = project.get("contact_info", "")

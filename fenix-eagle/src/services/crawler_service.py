@@ -25,9 +25,7 @@ class CrawlerService:
         logger.info("Cleaning up CrawlerService")
         self.is_initialized = False
 
-    async def crawl_url(
-        self, url: str, extract_keywords: list[str] = None, ai_extract: bool = True
-    ) -> str:
+    async def crawl_url(self, url: str, extract_keywords: list[str] = None, ai_extract: bool = True) -> str:
         """Crawl a specific URL using AI-powered extraction"""
         if extract_keywords is None:
             extract_keywords = []
@@ -46,15 +44,11 @@ class CrawlerService:
         logger.info(f"Starting crawl job {job_id} for URL: {url}")
 
         # Start crawling in background
-        asyncio.create_task(
-            self._execute_crawl(job_id, url, extract_keywords, ai_extract)
-        )
+        asyncio.create_task(self._execute_crawl(job_id, url, extract_keywords, ai_extract))
 
         return job_id
 
-    async def _execute_crawl(
-        self, job_id: str, url: str, extract_keywords: list[str], ai_extract: bool
-    ):
+    async def _execute_crawl(self, job_id: str, url: str, extract_keywords: list[str], ai_extract: bool):
         """Execute the actual crawling process"""
         try:
             # Update job status
@@ -80,9 +74,7 @@ class CrawlerService:
                 ai_processed=ai_extract,
                 structured_data={
                     "title": "Mock Crawled Page",
-                    "keywords_found": extract_keywords
-                    if extract_keywords
-                    else ["mock", "crawl"],
+                    "keywords_found": extract_keywords if extract_keywords else ["mock", "crawl"],
                     "relevance_score": 0.75,
                 },
             )
@@ -100,9 +92,7 @@ class CrawlerService:
 
         except Exception as e:
             logger.error(f"Error in crawl job {job_id}: {str(e)}")
-            self.crawl_jobs[job_id].update(
-                {"status": "failed", "error": str(e), "completed_at": datetime.now()}
-            )
+            self.crawl_jobs[job_id].update({"status": "failed", "error": str(e), "completed_at": datetime.now()})
 
     async def get_crawl_status(self, job_id: str) -> dict[str, Any] | None:
         """Get the status of a crawl job"""

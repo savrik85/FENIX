@@ -57,8 +57,7 @@ app = FastAPI(
 class ScrapingRequest(BaseModel):
     source: str = Field(
         ...,
-        description="Scraping source (e.g., 'sam.gov', 'dodge', 'construction.com', "
-        "'nyc.opendata', 'shovels.ai')",
+        description="Scraping source (e.g., 'sam.gov', 'dodge', 'construction.com', 'nyc.opendata', 'shovels.ai')",
     )
     keywords: list[str] = Field(default=[], description="Keywords to search for")
     filters: dict[str, Any] = Field(default={}, description="Additional filters")
@@ -122,9 +121,7 @@ async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundT
     """Start a new scraping job"""
     try:
         if not scraper_service:
-            raise HTTPException(
-                status_code=503, detail="Scraper service not initialized"
-            )
+            raise HTTPException(status_code=503, detail="Scraper service not initialized")
 
         job = await scraper_service.create_job(
             source=request.source,
@@ -153,9 +150,7 @@ async def get_scraping_status(job_id: str):
     """Get status of a scraping job"""
     try:
         if not scraper_service:
-            raise HTTPException(
-                status_code=503, detail="Scraper service not initialized"
-            )
+            raise HTTPException(status_code=503, detail="Scraper service not initialized")
 
         status = await scraper_service.get_job_status(job_id)
         if not status:
@@ -175,9 +170,7 @@ async def get_scraping_results(job_id: str):
     """Get results of a completed scraping job"""
     try:
         if not scraper_service:
-            raise HTTPException(
-                status_code=503, detail="Scraper service not initialized"
-            )
+            raise HTTPException(status_code=503, detail="Scraper service not initialized")
 
         results = await scraper_service.get_job_results(job_id)
         if not results:
@@ -193,19 +186,13 @@ async def get_scraping_results(job_id: str):
 
 
 @app.get("/scrape/jobs")
-async def list_scraping_jobs(
-    status: str | None = None, source: str | None = None, limit: int = 50
-):
+async def list_scraping_jobs(status: str | None = None, source: str | None = None, limit: int = 50):
     """List scraping jobs with optional filters"""
     try:
         if not scraper_service:
-            raise HTTPException(
-                status_code=503, detail="Scraper service not initialized"
-            )
+            raise HTTPException(status_code=503, detail="Scraper service not initialized")
 
-        jobs = await scraper_service.list_jobs(
-            status=status, source=source, limit=limit
-        )
+        jobs = await scraper_service.list_jobs(status=status, source=source, limit=limit)
 
         return {"jobs": jobs, "total_count": len(jobs)}
 
@@ -228,13 +215,9 @@ async def crawl_url(
 
     try:
         if not crawler_service:
-            raise HTTPException(
-                status_code=503, detail="Crawler service not initialized"
-            )
+            raise HTTPException(status_code=503, detail="Crawler service not initialized")
 
-        job_id = await crawler_service.crawl_url(
-            url=url, extract_keywords=extract_keywords, ai_extract=ai_extract
-        )
+        job_id = await crawler_service.crawl_url(url=url, extract_keywords=extract_keywords, ai_extract=ai_extract)
 
         return {
             "job_id": job_id,
@@ -270,8 +253,7 @@ async def get_available_sources():
             {
                 "id": "construction.com",
                 "name": "Construction.com",
-                "description": "Dodge Construction Network - commercial "
-                "construction projects",
+                "description": "Dodge Construction Network - commercial construction projects",
                 "supported_filters": [
                     "project_type",
                     "location",
@@ -295,8 +277,7 @@ async def get_available_sources():
             {
                 "id": "shovels.ai",
                 "name": "Shovels AI",
-                "description": "Building permits and contractor data - FREE TRIAL "
-                "(1000 requests)",
+                "description": "Building permits and contractor data - FREE TRIAL (1000 requests)",
                 "supported_filters": [
                     "geo_id",
                     "contractor_id",
@@ -427,9 +408,7 @@ async def test_email_notification(email: str):
         result = await email_service.send_test_email(email)
 
         return {
-            "message": "Test email sent"
-            if result["success"]
-            else "Failed to send test email",
+            "message": "Test email sent" if result["success"] else "Failed to send test email",
             "success": result["success"],
             "details": result,
         }
@@ -472,13 +451,10 @@ async def get_monitoring_statistics():
             "monitoring_stats": stats,
             "system_info": {
                 "daily_scan_time": (
-                    f"{getattr(settings, 'daily_scan_hour', 8)}:"
-                    f"{getattr(settings, 'daily_scan_minute', 0):02d}"
+                    f"{getattr(settings, 'daily_scan_hour', 8)}:{getattr(settings, 'daily_scan_minute', 0):02d}"
                 ),
                 "monitoring_enabled": getattr(settings, "monitoring_enabled", True),
-                "default_notification_email": getattr(
-                    settings, "default_notification_email", "not_configured"
-                ),
+                "default_notification_email": getattr(settings, "default_notification_email", "not_configured"),
             },
         }
 

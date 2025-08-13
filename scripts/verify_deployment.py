@@ -13,9 +13,7 @@ import requests
 def run_command(cmd: str, timeout: int = 30) -> tuple[bool, str]:
     """Run shell command and return success status and output"""
     try:
-        result = subprocess.run(
-            cmd, shell=True, capture_output=True, text=True, timeout=timeout
-        )
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
         return result.returncode == 0, result.stdout + result.stderr
     except subprocess.TimeoutExpired:
         return False, f"Command timed out after {timeout} seconds"
@@ -98,9 +96,7 @@ def check_database_connection():
     """Check database connectivity"""
     print("\n🗄️ Checking database connection...")
 
-    success, output = run_command(
-        "docker compose exec postgres pg_isready -h localhost -p 5432 -U fenix"
-    )
+    success, output = run_command("docker compose exec postgres pg_isready -h localhost -p 5432 -U fenix")
 
     if success:
         print("✅ Database is ready")
@@ -164,9 +160,7 @@ def check_logs_for_errors():
     services = ["eagle", "celery-worker", "celery-beat"]
 
     for service in services:
-        success, output = run_command(
-            f"docker compose logs --tail=50 {service}", timeout=10
-        )
+        success, output = run_command(f"docker compose logs --tail=50 {service}", timeout=10)
 
         if success:
             # Look for error patterns
