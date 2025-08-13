@@ -335,7 +335,9 @@ class EmailService:
                 </p>
             </div>
 
-            {% for tender, ai_email in zip(tenders, ai_emails) %}
+            {% for loop_item in range(tenders|length) %}
+            {% set tender = tenders[loop_item] %}
+            {% set ai_email = ai_emails[loop_item] %}
             <div class="ai-email-card">
                 <div class="ai-email-title">
                     Obchodní email pro: {{ tender.title[:50] }}{% if tender.title|length > 50 %}...{% endif %}
