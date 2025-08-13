@@ -420,8 +420,10 @@ class EmailService:
         lines.append("pomocí AI a jsou připraveny pro použití v produkčním režimu.")
         lines.append("")
 
-        for i, (tender, ai_email) in enumerate(zip(tenders, ai_emails, strict=False), 1):
-            lines.append(f"EMAIL {i}: {tender['title'][:60]}{'...' if len(tender['title']) > 60 else ''}")
+        for i in range(len(tenders)):
+            tender = tenders[i]
+            ai_email = ai_emails[i]
+            lines.append(f"EMAIL {i+1}: {tender['title'][:60]}{'...' if len(tender['title']) > 60 else ''}")
             lines.append("-" * 50)
             lines.append("")
             lines.append(ai_email)
