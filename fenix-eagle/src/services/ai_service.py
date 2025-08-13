@@ -67,7 +67,23 @@ class AIService:
                             "Reference the specific organization if provided. "
                             "Do NOT suggest in-person meetings or site visits since "
                             "we operate remotely from Czech Republic. "
-                            "ALWAYS include complete contact information at the end."
+                            "CRITICAL: You MUST end every email with this EXACT contact block: "
+                            "Best regards, "
+                            "Dual Action Windows Team "
+                            ""
+                            "Dual Action Windows, LLC "
+                            ""
+                            "US Mailing Address: "
+                            "1601-1 N Main St #3159, Jacksonville, FL 32206, USA "
+                            ""
+                            "European Mailing Address: "
+                            "Simackova 908/17, Prague 7, 170 00, Czech Republic "
+                            ""
+                            "📞 (321) 765-3355 "
+                            "Call us now – our experts are here to help! "
+                            ""
+                            "✉️ info@dualactionwindows.com "
+                            "Email us – our team is ready to assist you!"
                         ),
                     },
                     {"role": "user", "content": prompt},
@@ -164,7 +180,9 @@ class AIService:
                 "",
                 "Email should be max 250 words, professional but friendly tone. "
                 "IMPORTANT: Do NOT suggest in-person meetings or site visits. "
-                "ALWAYS include the complete contact information block at the end.",
+                "CRITICAL REQUIREMENT: End with EXACT contact signature provided in system message - "
+                "do NOT use placeholders like [Your Name] or [Your Email]. Use the complete "
+                "Dual Action Windows contact block exactly as specified in system prompt.",
             ]
         )
 
