@@ -212,7 +212,14 @@ async def get_scraping_results(job_id: str):
                     tender_list.append(tender_data)
 
                 return TenderResponse(
-                    job_id="all", tenders=tender_list, total_count=len(tender_list), status="completed"
+                    tenders=tender_list,
+                    total_count=len(tender_list),
+                    job_info={
+                        "job_id": "all",
+                        "status": "completed",
+                        "source": "database",
+                        "created_at": "database_query",
+                    },
                 )
             finally:
                 db.close()
