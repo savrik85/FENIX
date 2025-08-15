@@ -34,6 +34,8 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: ${{ secrets.SERVER_PORT }}
+        debug: true
+        use_insecure_cipher: false
         script: |
           # Check OS and install git if not present
           if ! command -v git &> /dev/null; then
@@ -144,6 +146,7 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: ${{ secrets.SERVER_PORT }}
+        debug: true
         script: |
           if [ ${{ job.status }} == 'success' ]; then
             echo "$(date): GitHub Actions deployment successful" >> /var/log/fenix-deploy.log
