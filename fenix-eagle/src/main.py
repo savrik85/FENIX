@@ -175,12 +175,12 @@ async def get_scraping_status(job_id: str):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
-@app.get("/scrape/results/{job_id}", response_model=TenderResponse)
+@app.get("/scrape/results/{job_id}")
 async def get_scraping_results(job_id: str):
     """Get results of a completed scraping job or all tenders from database"""
     try:
         if job_id == "all":
-            # Special case: return all tenders from database
+            # Special case: return all tenders from database (bypass Pydantic)
             from sqlalchemy import desc
 
             from .database.models import SessionLocal, StoredTender
@@ -191,36 +191,36 @@ async def get_scraping_results(job_id: str):
 
                 tender_list = []
                 for tender in tenders:
-                    tender_data = TenderData(
-                        tender_id=tender.tender_id or str(tender.id),
-                        title=tender.title,
-                        description=tender.description or "",
-                        source=tender.source,
-                        source_url=tender.source_url or "",
-                        posting_date=tender.posting_date or tender.created_at,
-                        response_deadline=tender.response_deadline,
-                        estimated_value=tender.estimated_value,
-                        location=tender.location,
-                        naics_codes=tender.naics_codes or [],
-                        keywords_found=tender.keywords_found or [],
-                        relevance_score=tender.relevance_score,
-                        contact_info=tender.contact_info or {},
-                        requirements=tender.requirements or [],
-                        extracted_data=tender.extracted_data or {},
-                        created_at=tender.created_at or tender.posting_date,
-                    )
+                    tender_data = {
+                        "tender_id": tender.tender_id or str(tender.id),
+                        "title": tender.title,
+                        "description": tender.description or "",
+                        "source": tender.source,
+                        "source_url": tender.source_url or "",
+                        "posting_date": tender.posting_date.isoformat() if tender.posting_date else None,
+                        "response_deadline": tender.response_deadline.isoformat() if tender.response_deadline else None,
+                        "estimated_value": tender.estimated_value,
+                        "location": tender.location,
+                        "naics_codes": tender.naics_codes or [],
+                        "keywords_found": tender.keywords_found or [],
+                        "relevance_score": tender.relevance_score,
+                        "contact_info": tender.contact_info or {},
+                        "requirements": tender.requirements or [],
+                        "extracted_data": tender.extracted_data or {},
+                        "created_at": tender.created_at.isoformat() if tender.created_at else None,
+                    }
                     tender_list.append(tender_data)
 
-                return TenderResponse(
-                    tenders=tender_list,
-                    total_count=len(tender_list),
-                    job_info={
+                return {
+                    "tenders": tender_list,
+                    "total_count": len(tender_list),
+                    "job_info": {
                         "job_id": "all",
                         "status": "completed",
                         "source": "database",
                         "created_at": "database_query",
                     },
-                )
+                }
             finally:
                 db.close()
 
