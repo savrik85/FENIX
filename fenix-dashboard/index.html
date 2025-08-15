@@ -307,26 +307,11 @@
                 },
 
                 async loadTenders() {
-                    const response = await fetch('http://69.55.55.8:8001/scrape/jobs');
+                    const response = await fetch('http://69.55.55.8:8001/tenders?limit=100');
                     if (!response.ok) throw new Error('Failed to load tenders');
 
                     const data = await response.json();
-                    const jobs = data.jobs || []; // Extract jobs array from response
-                    this.allTenders = [];
-
-                    for (const job of jobs) {
-                        if (job.status === 'completed') {
-                            try {
-                                const resultsResponse = await fetch(`http://69.55.55.8:8001/scrape/results/${job.job_id}`);
-                                if (resultsResponse.ok) {
-                                    const results = await resultsResponse.json();
-                                    this.allTenders.push(...results.tenders);
-                                }
-                            } catch (error) {
-                                console.error(`Error loading results for job ${job.job_id}:`, error);
-                            }
-                        }
-                    }
+                    this.allTenders = data.tenders || [];
                 },
 
                 async loadStats() {

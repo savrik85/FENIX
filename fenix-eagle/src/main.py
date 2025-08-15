@@ -473,6 +473,55 @@ async def get_monitoring_statistics():
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+@app.get("/tenders")
+async def get_all_tenders(limit: int = 100, offset: int = 0):
+    """Get all stored tenders from database"""
+    try:
+        from sqlalchemy import desc
+
+        from .database.models import SessionLocal, StoredTender
+
+        db = SessionLocal()
+        try:
+            # Get tenders from database with pagination
+            query = db.query(StoredTender).order_by(desc(StoredTender.created_at))
+            total_count = query.count()
+            tenders = query.offset(offset).limit(limit).all()
+
+            # Convert to response format
+            tender_list = []
+            for tender in tenders:
+                tender_data = {
+                    "tender_id": tender.tender_id,
+                    "title": tender.title,
+                    "description": tender.description,
+                    "source": tender.source,
+                    "source_url": tender.source_url,
+                    "posting_date": tender.posting_date.isoformat() if tender.posting_date else None,
+                    "response_deadline": tender.response_deadline.isoformat() if tender.response_deadline else None,
+                    "estimated_value": tender.estimated_value,
+                    "location": tender.location,
+                    "naics_codes": tender.naics_codes or [],
+                    "keywords_found": tender.keywords_found or [],
+                    "relevance_score": tender.relevance_score,
+                    "contact_info": tender.contact_info or {},
+                    "requirements": tender.requirements or [],
+                    "extracted_data": tender.extracted_data or {},
+                    "created_at": tender.created_at.isoformat() if tender.created_at else None,
+                    "updated_at": tender.updated_at.isoformat() if tender.updated_at else None,
+                }
+                tender_list.append(tender_data)
+
+            return {"tenders": tender_list, "total_count": total_count, "limit": limit, "offset": offset}
+
+        finally:
+            db.close()
+
+    except Exception as e:
+        logger.error(f"Error getting tenders: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
 if __name__ == "__main__":
     import uvicorn
 
