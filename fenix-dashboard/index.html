@@ -11,30 +11,114 @@
             theme: {
                 extend: {
                     colors: {
-                        'fenix-blue': '#1e40af',
-                        'fenix-light': '#3b82f6',
+                        'fenix-fire': '#ff6b35',
+                        'fenix-ember': '#f7931e',
+                        'fenix-ash': '#2d3748',
+                        'fenix-smoke': '#1a202c',
+                        'fenix-gold': '#fbbf24',
+                        'fenix-dark': '#0f0f0f',
+                        'fenix-charcoal': '#171923',
+                    },
+                    animation: {
+                        'flame': 'flame 2s ease-in-out infinite alternate',
+                        'glow': 'glow 3s ease-in-out infinite alternate',
+                        'rise': 'rise 0.8s ease-out',
+                    },
+                    backgroundImage: {
+                        'fenix-gradient': 'linear-gradient(135deg, #1a202c 0%, #2d3748 50%, #ff6b35 100%)',
+                        'fire-gradient': 'linear-gradient(45deg, #ff6b35 0%, #f7931e 50%, #fbbf24 100%)',
+                        'ember-glow': 'radial-gradient(circle, rgba(255,107,53,0.2) 0%, transparent 70%)',
                     }
                 }
             }
         }
     </script>
+    <style>
+        @keyframes flame {
+            0% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+            100% { transform: scale(1.05) rotate(1deg); filter: brightness(1.2); }
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(255,107,53,0.3); }
+            100% { box-shadow: 0 0 25px rgba(255,107,53,0.8), 0 0 35px rgba(247,147,30,0.6); }
+        }
+
+        @keyframes rise {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .fenix-card {
+            background: linear-gradient(145deg, rgba(26,32,44,0.9) 0%, rgba(45,55,72,0.95) 100%);
+            border: 1px solid rgba(255,107,53,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .fenix-glow:hover {
+            animation: glow 0.3s ease-in-out;
+        }
+
+        .fenix-text-glow {
+            text-shadow: 0 0 10px rgba(255,107,53,0.5);
+        }
+
+        .ember-dot {
+            background: radial-gradient(circle, #ff6b35 0%, #f7931e 50%, transparent 70%);
+            animation: flame 3s ease-in-out infinite;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <div x-data="dashboard()" class="container mx-auto px-4 py-8">
+<body class="bg-fenix-dark min-h-screen bg-fenix-gradient">
+    <!-- Floating ember particles for atmosphere -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden">
+        <div class="ember-dot absolute top-10 left-10 w-2 h-2 rounded-full opacity-30" style="animation-delay: 0s;"></div>
+        <div class="ember-dot absolute top-32 right-20 w-1 h-1 rounded-full opacity-40" style="animation-delay: 1s;"></div>
+        <div class="ember-dot absolute bottom-40 left-1/4 w-1.5 h-1.5 rounded-full opacity-20" style="animation-delay: 2s;"></div>
+        <div class="ember-dot absolute bottom-20 right-1/3 w-1 h-1 rounded-full opacity-50" style="animation-delay: 0.5s;"></div>
+    </div>
+
+    <div x-data="dashboard()" class="container mx-auto px-4 py-8 relative z-10 animate-rise">
         <!-- Header -->
         <header class="mb-8">
             <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-800">FENIX Dashboard</h1>
-                    <p class="text-gray-600 mt-2">Přehled získaných dat o tendrech a zakázkách</p>
+                <div class="flex items-center space-x-4">
+                    <!-- Phoenix Icon -->
+                    <div class="relative">
+                        <div class="w-16 h-16 bg-fire-gradient rounded-full flex items-center justify-center animate-glow">
+                            <svg class="w-10 h-10 text-fenix-dark animate-flame" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C8.5 2 5.8 4.1 5.1 7.1C4.5 5.8 4.5 4.2 5.2 2.8C3.1 4.1 2 6.8 2 9.5C2 13.1 4.9 16 8.5 16C9.8 16 11 15.6 12 14.9C13 15.6 14.2 16 15.5 16C19.1 16 22 13.1 22 9.5C22 6.8 20.9 4.1 18.8 2.8C19.5 4.2 19.5 5.8 18.9 7.1C18.2 4.1 15.5 2 12 2Z"/>
+                                <path d="M12 22C15.3 22 18 19.3 18 16C18 14.7 17.6 13.5 16.9 12.5C17.6 13.5 18 14.7 18 16C18 19.3 15.3 22 12 22Z"/>
+                            </svg>
+                        </div>
+                        <div class="absolute -inset-2 bg-ember-glow rounded-full opacity-50"></div>
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-bold text-transparent bg-fire-gradient bg-clip-text fenix-text-glow">
+                            FENIX Dashboard
+                        </h1>
+                        <p class="text-orange-200 mt-2 font-medium">Přehled získaných dat o tendrech a zakázkách</p>
+                    </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <div class="text-sm text-gray-500" x-text="'Poslední aktualizace: ' + lastUpdate"></div>
+                    <div class="text-sm text-orange-300" x-text="'Poslední aktualizace: ' + lastUpdate"></div>
                     <button @click="refreshData()"
-                            class="bg-fenix-blue hover:bg-fenix-light text-white px-4 py-2 rounded-lg transition duration-200"
+                            class="bg-fire-gradient hover:shadow-lg hover:shadow-fenix-fire/50 text-fenix-dark px-6 py-3 rounded-lg transition-all duration-300 font-semibold fenix-glow"
                             :disabled="loading">
-                        <span x-show="!loading">Obnovit</span>
-                        <span x-show="loading">Načítání...</span>
+                        <span x-show="!loading" class="flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            <span>Obnovit</span>
+                        </span>
+                        <span x-show="loading" class="flex items-center space-x-2">
+                            <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-dasharray="32" stroke-dashoffset="32">
+                                    <animate attributeName="stroke-dashoffset" dur="1s" values="32;0" repeatCount="indefinite"/>
+                                </circle>
+                            </svg>
+                            <span>Načítání...</span>
+                        </span>
                     </button>
                 </div>
             </div>
@@ -42,139 +126,187 @@
 
         <!-- Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="fenix-card rounded-xl shadow-2xl p-6 hover:shadow-fenix-fire/20 transition-all duration-300 group">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">Celkem tendrů</p>
-                        <p class="text-2xl font-bold text-gray-900" x-text="stats.totalTenders"></p>
+                        <p class="text-sm font-medium text-orange-300 mb-2">Celkem tendrů</p>
+                        <p class="text-3xl font-bold text-white group-hover:text-fenix-ember transition-colors" x-text="stats.totalTenders"></p>
                     </div>
-                    <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="h-14 w-14 bg-gradient-to-br from-fenix-fire to-fenix-ember rounded-xl flex items-center justify-center animate-flame">
+                        <svg class="h-7 w-7 text-fenix-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="fenix-card rounded-xl shadow-2xl p-6 hover:shadow-fenix-ember/20 transition-all duration-300 group">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">Aktivní úlohy</p>
-                        <p class="text-2xl font-bold text-gray-900" x-text="stats.activeJobs"></p>
+                        <p class="text-sm font-medium text-orange-300 mb-2">Aktivní úlohy</p>
+                        <p class="text-3xl font-bold text-white group-hover:text-green-400 transition-colors" x-text="stats.activeJobs"></p>
                     </div>
-                    <div class="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                        <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="h-14 w-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center animate-pulse">
+                        <svg class="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="fenix-card rounded-xl shadow-2xl p-6 hover:shadow-purple-500/20 transition-all duration-300 group">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">Zdroje dat</p>
-                        <p class="text-2xl font-bold text-gray-900" x-text="stats.totalSources"></p>
+                        <p class="text-sm font-medium text-orange-300 mb-2">Zdroje dat</p>
+                        <p class="text-3xl font-bold text-white group-hover:text-purple-400 transition-colors" x-text="stats.totalSources"></p>
                     </div>
-                    <div class="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="h-14 w-14 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                        <svg class="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"/>
                         </svg>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="fenix-card rounded-xl shadow-2xl p-6 hover:shadow-fenix-gold/20 transition-all duration-300 group">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">Průměrná relevance</p>
-                        <p class="text-2xl font-bold text-gray-900" x-text="(stats.avgRelevance * 100).toFixed(1) + '%'"></p>
+                        <p class="text-sm font-medium text-orange-300 mb-2">Průměrná relevance</p>
+                        <p class="text-3xl font-bold text-white group-hover:text-fenix-gold transition-colors" x-text="(stats.avgRelevance * 100).toFixed(1) + '%'"></p>
                     </div>
-                    <div class="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                        <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                    <div class="h-14 w-14 bg-gradient-to-br from-fenix-gold to-yellow-500 rounded-xl flex items-center justify-center animate-glow">
+                        <svg class="h-7 w-7 text-fenix-dark" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
                         </svg>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Navigation Tabs -->
+        <div class="fenix-card rounded-xl shadow-2xl mb-8 overflow-hidden">
+            <div class="border-b border-fenix-fire/20">
+                <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+                    <button @click="activeTab = 'tenders'"
+                            :class="activeTab === 'tenders' ? 'border-fenix-fire text-fenix-fire bg-fenix-fire/10' : 'border-transparent text-orange-300 hover:text-fenix-ember hover:border-fenix-ember/50'"
+                            class="whitespace-nowrap py-4 px-4 border-b-2 font-semibold text-sm transition-all duration-300 rounded-t-lg">
+                        <span class="flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                            <span>Tendry</span>
+                        </span>
+                    </button>
+                    <button @click="activeTab = 'emails'"
+                            :class="activeTab === 'emails' ? 'border-fenix-ember text-fenix-ember bg-fenix-ember/10' : 'border-transparent text-orange-300 hover:text-fenix-ember hover:border-fenix-ember/50'"
+                            class="whitespace-nowrap py-4 px-4 border-b-2 font-semibold text-sm transition-all duration-300 rounded-t-lg">
+                        <span class="flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            <span>Vygenerované emaily</span>
+                        </span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+
         <!-- Filters -->
-        <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <h2 class="text-lg font-semibold text-gray-800 mb-4">Filtry</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div x-show="activeTab === 'tenders'" class="fenix-card rounded-xl shadow-2xl p-6 mb-8">
+            <h2 class="text-xl font-bold text-white mb-6 flex items-center space-x-2">
+                <svg class="w-6 h-6 text-fenix-fire" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"/>
+                </svg>
+                <span>Filtry</span>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Zdroj</label>
+                    <label class="block text-sm font-semibold text-orange-300 mb-3">Zdroj dat</label>
                     <select x-model="filters.source" @change="filterTenders()"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-fenix-blue">
-                        <option value="">Všechny zdroje</option>
-                        <option value="sam.gov">SAM.gov</option>
-                        <option value="dodge">Dodge Construction</option>
-                        <option value="construction.com">Construction.com</option>
-                        <option value="nyc.opendata">NYC Open Data</option>
-                        <option value="shovels.ai">Shovels AI</option>
+                            class="w-full bg-fenix-ash border border-fenix-fire/30 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-fenix-fire focus:border-transparent transition-all duration-300">
+                        <option value="" class="bg-fenix-ash">Všechny zdroje</option>
+                        <option value="sam.gov" class="bg-fenix-ash">SAM.gov</option>
+                        <option value="dodge" class="bg-fenix-ash">Dodge Construction</option>
+                        <option value="construction.com" class="bg-fenix-ash">Construction.com</option>
+                        <option value="nyc.opendata" class="bg-fenix-ash">NYC Open Data</option>
+                        <option value="shovels.ai" class="bg-fenix-ash">Shovels AI</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Min. relevance</label>
+                    <label class="block text-sm font-semibold text-orange-300 mb-3">Minimální relevance</label>
                     <input type="range" min="0" max="1" step="0.1" x-model="filters.minRelevance" @change="filterTenders()"
-                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
-                    <div class="text-sm text-gray-500 mt-1" x-text="(filters.minRelevance * 100) + '%'"></div>
+                           class="w-full h-3 bg-fenix-ash rounded-lg appearance-none cursor-pointer slider">
+                    <div class="text-sm text-fenix-ember mt-2 font-medium" x-text="(filters.minRelevance * 100) + '%'"></div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Vyhledávání</label>
+                    <label class="block text-sm font-semibold text-orange-300 mb-3">Vyhledávání</label>
                     <input type="text" x-model="filters.search" @input="filterTenders()" placeholder="Hledat v názvu nebo popisu..."
-                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-fenix-blue">
+                           class="w-full bg-fenix-ash border border-fenix-fire/30 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-fenix-fire focus:border-transparent transition-all duration-300 placeholder-orange-400/70">
                 </div>
             </div>
         </div>
 
         <!-- Tenders Table -->
-        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-800">Tendry a zakázky</h2>
-                <p class="text-sm text-gray-600 mt-1" x-text="'Zobrazeno ' + filteredTenders.length + ' z ' + allTenders.length + ' tendrů'"></p>
+        <div x-show="activeTab === 'tenders'" class="fenix-card rounded-xl shadow-2xl overflow-hidden">
+            <div class="px-6 py-6 border-b border-fenix-fire/20">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white flex items-center space-x-3">
+                            <svg class="w-8 h-8 text-fenix-fire" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                            <span>Tendry a zakázky</span>
+                        </h2>
+                        <p class="text-orange-300 mt-2 font-medium" x-text="'Zobrazeno ' + filteredTenders.length + ' z ' + allTenders.length + ' tendrů'"></p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-fenix-fire rounded-full animate-pulse"></div>
+                        <span class="text-orange-200 text-sm">Live data</span>
+                    </div>
+                </div>
             </div>
 
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full divide-y divide-fenix-fire/20">
+                    <thead class="bg-gradient-to-r from-fenix-ash to-fenix-smoke">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Název</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zdroj</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deadline</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hodnota</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Relevance</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akce</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-orange-300 uppercase tracking-wider">Název</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-orange-300 uppercase tracking-wider">Zdroj</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-orange-300 uppercase tracking-wider">Datum</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-orange-300 uppercase tracking-wider">Deadline</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-orange-300 uppercase tracking-wider">Hodnota</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-orange-300 uppercase tracking-wider">Relevance</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-orange-300 uppercase tracking-wider">Akce</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="divide-y divide-fenix-fire/10">
                         <template x-for="tender in filteredTenders" :key="tender.tender_id">
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-gray-900" x-text="tender.title.substring(0, 60) + (tender.title.length > 60 ? '...' : '')"></div>
-                                    <div class="text-sm text-gray-500" x-text="tender.location || 'Neurčeno'"></div>
+                            <tr class="hover:bg-fenix-fire/5 transition-all duration-300 group">
+                                <td class="px-6 py-5">
+                                    <div class="text-sm font-semibold text-white group-hover:text-fenix-ember transition-colors" x-text="tender.title.substring(0, 60) + (tender.title.length > 60 ? '...' : '')"></div>
+                                    <div class="text-sm text-orange-300 mt-1" x-text="tender.location || 'Neurčeno'"></div>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                <td class="px-6 py-5">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border"
                                           :class="getSourceBadgeClass(tender.source)" x-text="tender.source"></span>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-900" x-text="formatDate(tender.posting_date)"></td>
-                                <td class="px-6 py-4 text-sm text-gray-900" x-text="tender.response_deadline ? formatDate(tender.response_deadline) : '-'"></td>
-                                <td class="px-6 py-4 text-sm text-gray-900" x-text="tender.estimated_value ? formatCurrency(tender.estimated_value) : '-'"></td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center">
-                                        <div class="w-16 bg-gray-200 rounded-full h-2">
-                                            <div class="bg-fenix-blue h-2 rounded-full"
+                                <td class="px-6 py-5 text-sm text-orange-200 font-medium" x-text="formatDate(tender.posting_date)"></td>
+                                <td class="px-6 py-5 text-sm text-orange-200 font-medium" x-text="tender.response_deadline ? formatDate(tender.response_deadline) : '-'"></td>
+                                <td class="px-6 py-5 text-sm text-white font-semibold" x-text="tender.estimated_value ? formatCurrency(tender.estimated_value) : '-'"></td>
+                                <td class="px-6 py-5">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-20 bg-fenix-ash rounded-full h-3 relative overflow-hidden">
+                                            <div class="bg-gradient-to-r from-fenix-fire to-fenix-gold h-3 rounded-full transition-all duration-500"
                                                  :style="'width: ' + (tender.relevance_score * 100) + '%'"></div>
                                         </div>
-                                        <span class="ml-2 text-sm text-gray-600" x-text="(tender.relevance_score * 100).toFixed(0) + '%'"></span>
+                                        <span class="text-sm text-fenix-gold font-bold" x-text="(tender.relevance_score * 100).toFixed(0) + '%'"></span>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 text-sm font-medium">
+                                <td class="px-6 py-5 text-sm font-semibold">
                                     <button @click="showTenderDetail(tender)"
-                                            class="text-fenix-blue hover:text-fenix-light">Detail</button>
+                                            class="bg-fire-gradient text-fenix-dark px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-fenix-fire/30 transition-all duration-300 font-bold">
+                                        Detail
+                                    </button>
                                 </td>
                             </tr>
                         </template>
@@ -183,11 +315,11 @@
             </div>
 
             <!-- Empty state -->
-            <div x-show="filteredTenders.length === 0 && !loading" class="text-center py-12">
+            <div x-show="filteredTenders.length === 0 && !loading" class="text-center py-16">
                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">Žádné tendry</h3>
+                <h3 class="mt-4 text-lg font-bold text-white">Žádné tendry nenalezeny</h3>
                 <p class="mt-1 text-sm text-gray-500">Nebyly nalezeny žádné tendry odpovídající vašim kritériům.</p>
             </div>
 
@@ -195,6 +327,140 @@
             <div x-show="loading" class="text-center py-12">
                 <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-fenix-blue"></div>
                 <p class="mt-2 text-sm text-gray-500">Načítání dat...</p>
+            </div>
+        </div>
+
+        <!-- Emails Section -->
+        <div x-show="activeTab === 'emails'" class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-800">Vygenerované emaily</h2>
+                        <p class="text-sm text-gray-600 mt-1" x-text="'Celkem ' + allEmails.length + ' emailů'"></p>
+                    </div>
+                    <button @click="refreshEmails()"
+                            class="bg-fenix-blue hover:bg-fenix-light text-white px-4 py-2 rounded-lg transition duration-200"
+                            :disabled="loading">
+                        <span x-show="!loading">Obnovit emaily</span>
+                        <span x-show="loading">Načítání...</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Předmět</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tender</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vygenerováno</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AI Model</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <template x-for="email in allEmails" :key="email.email_id">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-medium text-gray-900" x-text="email.subject.substring(0, 50) + (email.subject.length > 50 ? '...' : '')"></div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900" x-text="email.tender_info?.title?.substring(0, 40) + (email.tender_info?.title?.length > 40 ? '...' : '') || email.tender_id"></div>
+                                    <div class="text-sm text-gray-500" x-text="email.tender_info?.location || 'Neurčeno'"></div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900" x-text="formatDate(email.generated_at)"></td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800" x-text="email.ai_model || 'N/A'"></span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                          :class="getEmailStatusClass(email.status)" x-text="email.status"></span>
+                                </td>
+                                <td class="px-6 py-4 text-sm font-medium space-x-2">
+                                    <button @click="showEmailDetail(email)"
+                                            class="text-fenix-blue hover:text-fenix-light">Zobrazit</button>
+                                    <button @click="copyEmailToClipboard(email)"
+                                            class="text-green-600 hover:text-green-500">Kopírovat</button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty state for emails -->
+            <div x-show="allEmails.length === 0 && !loading" class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Žádné emaily</h3>
+                <p class="mt-1 text-sm text-gray-500">Zatím nebyly vygenerovány žádné emaily.</p>
+            </div>
+
+            <!-- Loading state for emails -->
+            <div x-show="loading && activeTab === 'emails'" class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-fenix-blue"></div>
+                <p class="mt-2 text-sm text-gray-500">Načítání emailů...</p>
+            </div>
+        </div>
+
+        <!-- Email Detail Modal -->
+        <div x-show="showEmailModal" x-transition class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showEmailModal = false"></div>
+
+                <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full sm:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Detail emailu</h3>
+                        <button @click="showEmailModal = false" class="text-gray-400 hover:text-gray-600">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div x-show="selectedEmail" class="space-y-4">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Předmět</h4>
+                            <p class="mt-1 text-sm text-gray-900" x-text="selectedEmail?.subject"></p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Obsah emailu</h4>
+                            <div class="mt-1 p-3 bg-gray-50 rounded-lg">
+                                <pre class="whitespace-pre-wrap text-sm text-gray-900" x-text="selectedEmail?.content"></pre>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500">Tender</h4>
+                                <p class="mt-1 text-sm text-gray-900" x-text="selectedEmail?.tender_info?.title || selectedEmail?.tender_id"></p>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500">AI Model</h4>
+                                <p class="mt-1 text-sm text-gray-900" x-text="selectedEmail?.ai_model || 'N/A'"></p>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500">Vygenerováno</h4>
+                                <p class="mt-1 text-sm text-gray-900" x-text="selectedEmail?.generated_at ? formatDate(selectedEmail.generated_at) : 'N/A'"></p>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500">Status</h4>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                      :class="getEmailStatusClass(selectedEmail?.status)" x-text="selectedEmail?.status"></span>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t">
+                            <button @click="copyEmailToClipboard(selectedEmail)"
+                                    class="bg-fenix-blue hover:bg-fenix-light text-white px-4 py-2 rounded-lg transition duration-200">
+                                Kopírovat do schránky
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -258,6 +524,19 @@
                                 Zobrazit původní tender
                             </a>
                         </div>
+
+                        <div class="pt-4 border-t">
+                            <button @click="generateEmailForTender(selectedTender)"
+                                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 mr-2"
+                                    :disabled="generatingEmail">
+                                <span x-show="!generatingEmail">Generovat obchodní email</span>
+                                <span x-show="generatingEmail">Generuji...</span>
+                            </button>
+                            <button @click="viewTenderEmails(selectedTender)"
+                                    class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition duration-200">
+                                Zobrazit emaily
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -269,8 +548,10 @@
             return {
                 loading: false,
                 lastUpdate: '',
+                activeTab: 'tenders',
                 allTenders: [],
                 filteredTenders: [],
+                allEmails: [],
                 stats: {
                     totalTenders: 0,
                     activeJobs: 0,
@@ -284,6 +565,9 @@
                 },
                 showDetailModal: false,
                 selectedTender: null,
+                showEmailModal: false,
+                selectedEmail: null,
+                generatingEmail: false,
 
                 async init() {
                     await this.loadData();
@@ -295,6 +579,7 @@
                     try {
                         await Promise.all([
                             this.loadTenders(),
+                            this.loadEmails(),
                             this.loadStats()
                         ]);
                         this.filterTenders();
@@ -312,6 +597,19 @@
 
                     const data = await response.json();
                     this.allTenders = data.tenders || [];
+                },
+
+                async loadEmails() {
+                    try {
+                        const response = await fetch('http://69.55.55.8:8001/emails');
+                        if (!response.ok) throw new Error('Failed to load emails');
+
+                        const data = await response.json();
+                        this.allEmails = data.emails || [];
+                    } catch (error) {
+                        console.error('Error loading emails:', error);
+                        this.allEmails = [];
+                    }
                 },
 
                 async loadStats() {
@@ -393,14 +691,95 @@
                     }).format(value);
                 },
 
+                async refreshEmails() {
+                    await this.loadEmails();
+                },
+
+                async generateEmailForTender(tender) {
+                    this.generatingEmail = true;
+                    try {
+                        const response = await fetch('http://69.55.55.8:8001/emails/generate', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                tender_id: tender.tender_id
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Failed to generate email');
+                        }
+
+                        const result = await response.json();
+
+                        // Refresh emails list
+                        await this.loadEmails();
+
+                        // Show success message or switch to emails tab
+                        alert('Email byl úspěšně vygenerován!');
+                        this.activeTab = 'emails';
+
+                    } catch (error) {
+                        console.error('Error generating email:', error);
+                        alert('Chyba při generování emailu: ' + error.message);
+                    } finally {
+                        this.generatingEmail = false;
+                    }
+                },
+
+                showEmailDetail(email) {
+                    this.selectedEmail = email;
+                    this.showEmailModal = true;
+                },
+
+                viewTenderEmails(tender) {
+                    // Filter emails for this tender and switch to emails tab
+                    this.activeTab = 'emails';
+                    this.showDetailModal = false;
+
+                    // Scroll to top of page
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+
+                async copyEmailToClipboard(email) {
+                    try {
+                        const emailText = `Subject: ${email.subject}\n\n${email.content}`;
+                        await navigator.clipboard.writeText(emailText);
+                        alert('Email byl zkopírován do schránky!');
+                    } catch (error) {
+                        console.error('Error copying to clipboard:', error);
+                        // Fallback for older browsers
+                        const textArea = document.createElement('textarea');
+                        textArea.value = `Subject: ${email.subject}\n\n${email.content}`;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        alert('Email byl zkopírován do schránky!');
+                    }
+                },
+
+                getEmailStatusClass(status) {
+                    const classes = {
+                        'generated': 'bg-green-100 text-green-800',
+                        'sent': 'bg-blue-100 text-blue-800',
+                        'failed': 'bg-red-100 text-red-800',
+                        'generation_only': 'bg-yellow-100 text-yellow-800',
+                        'default': 'bg-gray-100 text-gray-800'
+                    };
+                    return classes[status] || classes.default;
+                },
+
                 getSourceBadgeClass(source) {
                     const classes = {
-                        'sam.gov': 'bg-blue-100 text-blue-800',
-                        'dodge': 'bg-green-100 text-green-800',
-                        'construction.com': 'bg-purple-100 text-purple-800',
-                        'nyc.opendata': 'bg-yellow-100 text-yellow-800',
-                        'shovels.ai': 'bg-pink-100 text-pink-800',
-                        'default': 'bg-gray-100 text-gray-800'
+                        'sam.gov': 'bg-blue-500/20 text-blue-400 border-blue-500/50',
+                        'dodge': 'bg-green-500/20 text-green-400 border-green-500/50',
+                        'construction.com': 'bg-purple-500/20 text-purple-400 border-purple-500/50',
+                        'nyc.opendata': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50',
+                        'shovels.ai': 'bg-pink-500/20 text-pink-400 border-pink-500/50',
+                        'default': 'bg-gray-500/20 text-gray-400 border-gray-500/50'
                     };
                     return classes[source] || classes.default;
                 }

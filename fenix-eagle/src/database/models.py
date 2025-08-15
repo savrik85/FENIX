@@ -97,6 +97,24 @@ class NotificationLog(Base):
     notification_metadata = Column(JSONB, default=dict)
 
 
+class GeneratedEmail(Base):
+    """AI-generated business emails for tenders"""
+
+    __tablename__ = "generated_emails"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    tender_id = Column(String(255), index=True)  # Reference to StoredTender
+    email_subject = Column(String(500), nullable=False)
+    email_content = Column(Text, nullable=False)
+    generated_at = Column(DateTime, default=func.now(), index=True)
+    ai_model_used = Column(String(100))  # e.g., "gpt-4", "gpt-3.5-turbo"
+    prompt_version = Column(String(50))  # For tracking prompt changes
+    contact_info = Column(JSONB, default=dict)  # Recipient details
+    tender_info = Column(JSONB, default=dict)  # Snapshot of tender data used
+    status = Column(String(20), default="generated", index=True)  # generated/sent/failed
+    metadata = Column(JSONB, default=dict)  # Additional data
+
+
 # Database engine and session
 engine = create_engine(settings.database_url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

@@ -1,5 +1,7 @@
 import logging
+from datetime import datetime
 from typing import Any
+from uuid import uuid4
 
 import openai
 
@@ -269,3 +271,138 @@ Email us – our team is ready to assist you!
         )
 
         return suggestions
+
+    async def create_and_store_business_email(self, tender_data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Generate business email and store it in database
+
+        Args:
+            tender_data: Dictionary containing tender information
+
+        Returns:
+            Dictionary with email info and database ID
+        """
+        # Generate email content
+        email_content = await self.generate_business_email(tender_data)
+
+        # Extract subject from email content
+        subject = self._extract_email_subject(email_content, tender_data)
+
+        # Store in database
+        try:
+            from ..database.models import GeneratedEmail, SessionLocal
+
+            db = SessionLocal()
+            try:
+                generated_email = GeneratedEmail(
+                    tender_id=tender_data.get("tender_id") or str(uuid4()),
+                    email_subject=subject,
+                    email_content=email_content,
+                    ai_model_used="gpt-4",
+                    prompt_version="v1.0",
+                    contact_info=tender_data.get("contact_info", {}),
+                    tender_info={
+                        "title": tender_data.get("title", ""),
+                        "source": tender_data.get("source", ""),
+                        "location": tender_data.get("location", ""),
+                        "estimated_value": tender_data.get("estimated_value"),
+                    },
+                    status="generated",
+                )
+
+                db.add(generated_email)
+                db.commit()
+                db.refresh(generated_email)
+
+                return {
+                    "email_id": str(generated_email.id),
+                    "tender_id": generated_email.tender_id,
+                    "subject": subject,
+                    "content": email_content,
+                    "generated_at": generated_email.generated_at.isoformat(),
+                    "status": "generated",
+                    "ai_model": "gpt-4",
+                }
+
+            finally:
+                db.close()
+
+        except Exception as e:
+            logger.error(f"Failed to store generated email: {str(e)}")
+            # Return email data even if storage failed
+            return {
+                "email_id": None,
+                "tender_id": tender_data.get("tender_id"),
+                "subject": subject,
+                "content": email_content,
+                "generated_at": datetime.now().isoformat(),
+                "status": "generation_only",
+                "error": f"Storage failed: {str(e)}",
+            }
+
+    def _extract_email_subject(self, email_content: str, tender_data: dict[str, Any]) -> str:
+        """Extract or generate email subject from content and tender data"""
+
+        # Try to find subject in email content (if AI generated one)
+        lines = email_content.split("\n")
+        for line in lines[:3]:  # Check first 3 lines
+            if line.strip().lower().startswith("subject:"):
+                return line.split(":", 1)[1].strip()
+
+        # Generate subject based on tender data
+        title = tender_data.get("title", "")
+        if title:
+            # Truncate long titles
+            if len(title) > 50:
+                title = title[:50] + "..."
+            return f"Re: {title} - Dual Action Windows Response"
+
+        return "Business Inquiry - Dual Action Windows"
+
+    async def get_stored_emails(self, tender_id: str = None, limit: int = 100) -> list[dict[str, Any]]:
+        """
+        Retrieve stored emails from database
+
+        Args:
+            tender_id: Optional tender ID to filter by
+            limit: Maximum number of emails to return
+
+        Returns:
+            List of email records
+        """
+        try:
+            from sqlalchemy import desc
+
+            from ..database.models import GeneratedEmail, SessionLocal
+
+            db = SessionLocal()
+            try:
+                query = db.query(GeneratedEmail).order_by(desc(GeneratedEmail.generated_at))
+
+                if tender_id:
+                    query = query.filter(GeneratedEmail.tender_id == tender_id)
+
+                emails = query.limit(limit).all()
+
+                return [
+                    {
+                        "email_id": str(email.id),
+                        "tender_id": email.tender_id,
+                        "subject": email.email_subject,
+                        "content": email.email_content,
+                        "generated_at": email.generated_at.isoformat(),
+                        "ai_model": email.ai_model_used,
+                        "prompt_version": email.prompt_version,
+                        "contact_info": email.contact_info or {},
+                        "tender_info": email.tender_info or {},
+                        "status": email.status,
+                    }
+                    for email in emails
+                ]
+
+            finally:
+                db.close()
+
+        except Exception as e:
+            logger.error(f"Failed to retrieve stored emails: {str(e)}")
+            return []

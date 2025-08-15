@@ -49,7 +49,9 @@
       "WebFetch(domain:github.com)",
       "Bash(ssh:*)",
       "Bash(python:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(pkill:*)",
+      "Bash(python:*)"
     ],
     "deny": []
   }

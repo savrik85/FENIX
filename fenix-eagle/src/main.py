@@ -519,6 +519,135 @@ async def get_monitoring_statistics():
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+# Email generation endpoints
+class EmailGenerationRequest(BaseModel):
+    tender_id: str = Field(..., description="ID of the tender to generate email for")
+
+
+@app.post("/emails/generate")
+async def generate_business_email(request: EmailGenerationRequest):
+    """Generate and store business email for a tender"""
+    try:
+        from .database.models import SessionLocal, StoredTender
+        from .services.ai_service import AIService
+
+        # Get tender data from database
+        db = SessionLocal()
+        try:
+            tender = db.query(StoredTender).filter(StoredTender.tender_id == request.tender_id).first()
+            if not tender:
+                raise HTTPException(status_code=404, detail="Tender not found")
+
+            # Convert tender to dict for AI service
+            tender_data = {
+                "tender_id": tender.tender_id,
+                "title": tender.title,
+                "description": tender.description or "",
+                "source": tender.source,
+                "source_url": tender.source_url,
+                "location": tender.location,
+                "estimated_value": tender.estimated_value,
+                "contact_info": tender.contact_info or {},
+                "keywords_found": tender.keywords_found or [],
+                "response_deadline": tender.response_deadline,
+            }
+
+        finally:
+            db.close()
+
+        # Generate and store email
+        ai_service = AIService()
+        email_result = await ai_service.create_and_store_business_email(tender_data)
+
+        return {"message": "Email generated and stored successfully", "email": email_result}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating business email: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.get("/emails")
+async def get_all_emails(limit: int = 100):
+    """Get all generated emails"""
+    try:
+        from .services.ai_service import AIService
+
+        ai_service = AIService()
+        emails = await ai_service.get_stored_emails(limit=limit)
+
+        return {"emails": emails, "total_count": len(emails)}
+
+    except Exception as e:
+        logger.error(f"Error retrieving emails: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.get("/emails/{tender_id}")
+async def get_emails_for_tender(tender_id: str):
+    """Get all emails generated for a specific tender"""
+    try:
+        from .services.ai_service import AIService
+
+        ai_service = AIService()
+        emails = await ai_service.get_stored_emails(tender_id=tender_id)
+
+        return {"tender_id": tender_id, "emails": emails, "total_count": len(emails)}
+
+    except Exception as e:
+        logger.error(f"Error retrieving emails for tender {tender_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.get("/emails/stats")
+async def get_email_statistics():
+    """Get email generation statistics"""
+    try:
+        from sqlalchemy import func
+
+        from .database.models import GeneratedEmail, SessionLocal
+
+        db = SessionLocal()
+        try:
+            # Total emails count
+            total_emails = db.query(func.count(GeneratedEmail.id)).scalar()
+
+            # Emails by status
+            status_counts = (
+                db.query(GeneratedEmail.status, func.count(GeneratedEmail.id)).group_by(GeneratedEmail.status).all()
+            )
+
+            # Emails by AI model
+            model_counts = (
+                db.query(GeneratedEmail.ai_model_used, func.count(GeneratedEmail.id))
+                .group_by(GeneratedEmail.ai_model_used)
+                .all()
+            )
+
+            # Recent emails (last 7 days)
+            from datetime import datetime, timedelta
+
+            week_ago = datetime.now() - timedelta(days=7)
+            recent_emails = (
+                db.query(func.count(GeneratedEmail.id)).filter(GeneratedEmail.generated_at >= week_ago).scalar()
+            )
+
+            return {
+                "total_emails": total_emails,
+                "recent_emails_7days": recent_emails,
+                "status_breakdown": dict(status_counts),
+                "model_breakdown": dict(model_counts),
+            }
+
+        finally:
+            db.close()
+
+    except Exception as e:
+        logger.error(f"Error getting email statistics: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
 if __name__ == "__main__":
     import uvicorn
 
