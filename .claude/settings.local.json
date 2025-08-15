@@ -48,7 +48,8 @@
       "Bash(docker exec:*)",
       "WebFetch(domain:github.com)",
       "Bash(ssh:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

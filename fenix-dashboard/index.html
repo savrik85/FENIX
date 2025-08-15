@@ -307,7 +307,7 @@
                 },
 
                 async loadTenders() {
-                    const response = await fetch('http://localhost:8001/scrape/jobs');
+                    const response = await fetch('http://69.55.55.8:8001/scrape/jobs');
                     if (!response.ok) throw new Error('Failed to load tenders');
 
                     const jobs = await response.json();
@@ -316,7 +316,7 @@
                     for (const job of jobs) {
                         if (job.status === 'completed') {
                             try {
-                                const resultsResponse = await fetch(`http://localhost:8001/scrape/results/${job.job_id}`);
+                                const resultsResponse = await fetch(`http://69.55.55.8:8001/scrape/results/${job.job_id}`);
                                 if (resultsResponse.ok) {
                                     const results = await resultsResponse.json();
                                     this.allTenders.push(...results.tenders);
@@ -330,7 +330,7 @@
 
                 async loadStats() {
                     try {
-                        const response = await fetch('http://localhost:8001/monitoring/stats');
+                        const response = await fetch('http://69.55.55.8:8001/monitoring/stats');
                         if (response.ok) {
                             const stats = await response.json();
                             this.stats = {
