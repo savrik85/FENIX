@@ -46,7 +46,9 @@
       "Bash(do nc -z localhost $port)",
       "Bash(echo:*)",
       "Bash(docker exec:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(ssh:*)",
+      "Bash(python:*)"
     ],
     "deny": []
   }

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FENIX Dashboard - Přehled získaných dat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'fenix-blue': '#1e40af',
+                        'fenix-light': '#3b82f6',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div x-data="dashboard()" class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">FENIX Dashboard</h1>
+                    <p class="text-gray-600 mt-2">Přehled získaných dat o tendrech a zakázkách</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-gray-500" x-text="'Poslední aktualizace: ' + lastUpdate"></div>
+                    <button @click="refreshData()"
+                            class="bg-fenix-blue hover:bg-fenix-light text-white px-4 py-2 rounded-lg transition duration-200"
+                            :disabled="loading">
+                        <span x-show="!loading">Obnovit</span>
+                        <span x-show="loading">Načítání...</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Celkem tendrů</p>
+                        <p class="text-2xl font-bold text-gray-900" x-text="stats.totalTenders"></p>
+                    </div>
+                    <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Aktivní úlohy</p>
+                        <p class="text-2xl font-bold text-gray-900" x-text="stats.activeJobs"></p>
+                    </div>
+                    <div class="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Zdroje dat</p>
+                        <p class="text-2xl font-bold text-gray-900" x-text="stats.totalSources"></p>
+                    </div>
+                    <div class="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Průměrná relevance</p>
+                        <p class="text-2xl font-bold text-gray-900" x-text="(stats.avgRelevance * 100).toFixed(1) + '%'"></p>
+                    </div>
+                    <div class="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <svg class="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Filtry</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Zdroj</label>
+                    <select x-model="filters.source" @change="filterTenders()"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-fenix-blue">
+                        <option value="">Všechny zdroje</option>
+                        <option value="sam.gov">SAM.gov</option>
+                        <option value="dodge">Dodge Construction</option>
+                        <option value="construction.com">Construction.com</option>
+                        <option value="nyc.opendata">NYC Open Data</option>
+                        <option value="shovels.ai">Shovels AI</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Min. relevance</label>
+                    <input type="range" min="0" max="1" step="0.1" x-model="filters.minRelevance" @change="filterTenders()"
+                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+                    <div class="text-sm text-gray-500 mt-1" x-text="(filters.minRelevance * 100) + '%'"></div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Vyhledávání</label>
+                    <input type="text" x-model="filters.search" @input="filterTenders()" placeholder="Hledat v názvu nebo popisu..."
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-fenix-blue">
+                </div>
+            </div>
+        </div>
+
+        <!-- Tenders Table -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-800">Tendry a zakázky</h2>
+                <p class="text-sm text-gray-600 mt-1" x-text="'Zobrazeno ' + filteredTenders.length + ' z ' + allTenders.length + ' tendrů'"></p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Název</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zdroj</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deadline</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hodnota</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Relevance</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akce</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <template x-for="tender in filteredTenders" :key="tender.tender_id">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-medium text-gray-900" x-text="tender.title.substring(0, 60) + (tender.title.length > 60 ? '...' : '')"></div>
+                                    <div class="text-sm text-gray-500" x-text="tender.location || 'Neurčeno'"></div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                          :class="getSourceBadgeClass(tender.source)" x-text="tender.source"></span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900" x-text="formatDate(tender.posting_date)"></td>
+                                <td class="px-6 py-4 text-sm text-gray-900" x-text="tender.response_deadline ? formatDate(tender.response_deadline) : '-'"></td>
+                                <td class="px-6 py-4 text-sm text-gray-900" x-text="tender.estimated_value ? formatCurrency(tender.estimated_value) : '-'"></td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="w-16 bg-gray-200 rounded-full h-2">
+                                            <div class="bg-fenix-blue h-2 rounded-full"
+                                                 :style="'width: ' + (tender.relevance_score * 100) + '%'"></div>
+                                        </div>
+                                        <span class="ml-2 text-sm text-gray-600" x-text="(tender.relevance_score * 100).toFixed(0) + '%'"></span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm font-medium">
+                                    <button @click="showTenderDetail(tender)"
+                                            class="text-fenix-blue hover:text-fenix-light">Detail</button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty state -->
+            <div x-show="filteredTenders.length === 0 && !loading" class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Žádné tendry</h3>
+                <p class="mt-1 text-sm text-gray-500">Nebyly nalezeny žádné tendry odpovídající vašim kritériům.</p>
+            </div>
+
+            <!-- Loading state -->
+            <div x-show="loading" class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-fenix-blue"></div>
+                <p class="mt-2 text-sm text-gray-500">Načítání dat...</p>
+            </div>
+        </div>
+
+        <!-- Tender Detail Modal -->
+        <div x-show="showDetailModal" x-transition class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showDetailModal = false"></div>
+
+                <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full sm:p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900">Detail tendru</h3>
+                        <button @click="showDetailModal = false" class="text-gray-400 hover:text-gray-600">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div x-show="selectedTender" class="space-y-4">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Název</h4>
+                            <p class="mt-1 text-sm text-gray-900" x-text="selectedTender?.title"></p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Popis</h4>
+                            <p class="mt-1 text-sm text-gray-900" x-text="selectedTender?.description"></p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500">Zdroj</h4>
+                                <p class="mt-1 text-sm text-gray-900" x-text="selectedTender?.source"></p>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500">Lokace</h4>
+                                <p class="mt-1 text-sm text-gray-900" x-text="selectedTender?.location || 'Neurčeno'"></p>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500">Odhadovaná hodnota</h4>
+                                <p class="mt-1 text-sm text-gray-900" x-text="selectedTender?.estimated_value ? formatCurrency(selectedTender.estimated_value) : 'Neurčeno'"></p>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-500">Relevance skóre</h4>
+                                <p class="mt-1 text-sm text-gray-900" x-text="selectedTender?.relevance_score ? (selectedTender.relevance_score * 100).toFixed(1) + '%' : 'Neurčeno'"></p>
+                            </div>
+                        </div>
+
+                        <div x-show="selectedTender?.keywords_found?.length > 0">
+                            <h4 class="text-sm font-medium text-gray-500">Nalezená klíčová slova</h4>
+                            <div class="mt-1 flex flex-wrap gap-2">
+                                <template x-for="keyword in selectedTender.keywords_found">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" x-text="keyword"></span>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div x-show="selectedTender?.source_url">
+                            <h4 class="text-sm font-medium text-gray-500">Odkaz na zdroj</h4>
+                            <a :href="selectedTender?.source_url" target="_blank" class="mt-1 text-sm text-fenix-blue hover:text-fenix-light">
+                                Zobrazit původní tender
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function dashboard() {
+            return {
+                loading: false,
+                lastUpdate: '',
+                allTenders: [],
+                filteredTenders: [],
+                stats: {
+                    totalTenders: 0,
+                    activeJobs: 0,
+                    totalSources: 0,
+                    avgRelevance: 0
+                },
+                filters: {
+                    source: '',
+                    minRelevance: 0,
+                    search: ''
+                },
+                showDetailModal: false,
+                selectedTender: null,
+
+                async init() {
+                    await this.loadData();
+                    this.startAutoRefresh();
+                },
+
+                async loadData() {
+                    this.loading = true;
+                    try {
+                        await Promise.all([
+                            this.loadTenders(),
+                            this.loadStats()
+                        ]);
+                        this.filterTenders();
+                        this.lastUpdate = new Date().toLocaleString('cs-CZ');
+                    } catch (error) {
+                        console.error('Chyba při načítání dat:', error);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                async loadTenders() {
+                    const response = await fetch('http://localhost:8001/scrape/jobs');
+                    if (!response.ok) throw new Error('Failed to load tenders');
+
+                    const jobs = await response.json();
+                    this.allTenders = [];
+
+                    for (const job of jobs) {
+                        if (job.status === 'completed') {
+                            try {
+                                const resultsResponse = await fetch(`http://localhost:8001/scrape/results/${job.job_id}`);
+                                if (resultsResponse.ok) {
+                                    const results = await resultsResponse.json();
+                                    this.allTenders.push(...results.tenders);
+                                }
+                            } catch (error) {
+                                console.error(`Error loading results for job ${job.job_id}:`, error);
+                            }
+                        }
+                    }
+                },
+
+                async loadStats() {
+                    try {
+                        const response = await fetch('http://localhost:8001/monitoring/stats');
+                        if (response.ok) {
+                            const stats = await response.json();
+                            this.stats = {
+                                totalTenders: this.allTenders.length,
+                                activeJobs: stats.active_jobs || 0,
+                                totalSources: new Set(this.allTenders.map(t => t.source)).size,
+                                avgRelevance: this.allTenders.length > 0
+                                    ? this.allTenders.reduce((sum, t) => sum + (t.relevance_score || 0), 0) / this.allTenders.length
+                                    : 0
+                            };
+                        }
+                    } catch (error) {
+                        console.error('Error loading stats:', error);
+                        this.calculateStats();
+                    }
+                },
+
+                calculateStats() {
+                    this.stats = {
+                        totalTenders: this.allTenders.length,
+                        activeJobs: 0,
+                        totalSources: new Set(this.allTenders.map(t => t.source)).size,
+                        avgRelevance: this.allTenders.length > 0
+                            ? this.allTenders.reduce((sum, t) => sum + (t.relevance_score || 0), 0) / this.allTenders.length
+                            : 0
+                    };
+                },
+
+
+                filterTenders() {
+                    this.filteredTenders = this.allTenders.filter(tender => {
+                        if (this.filters.source && tender.source !== this.filters.source) {
+                            return false;
+                        }
+
+                        if (tender.relevance_score && tender.relevance_score < this.filters.minRelevance) {
+                            return false;
+                        }
+
+                        if (this.filters.search) {
+                            const search = this.filters.search.toLowerCase();
+                            return tender.title.toLowerCase().includes(search) ||
+                                   (tender.description && tender.description.toLowerCase().includes(search));
+                        }
+
+                        return true;
+                    });
+                },
+
+                async refreshData() {
+                    await this.loadData();
+                },
+
+                startAutoRefresh() {
+                    setInterval(() => {
+                        this.refreshData();
+                    }, 30000); // 30 sekund
+                },
+
+                showTenderDetail(tender) {
+                    this.selectedTender = tender;
+                    this.showDetailModal = true;
+                },
+
+                formatDate(dateString) {
+                    if (!dateString) return '-';
+                    return new Date(dateString).toLocaleDateString('cs-CZ');
+                },
+
+                formatCurrency(value) {
+                    return new Intl.NumberFormat('cs-CZ', {
+                        style: 'currency',
+                        currency: 'CZK'
+                    }).format(value);
+                },
+
+                getSourceBadgeClass(source) {
+                    const classes = {
+                        'sam.gov': 'bg-blue-100 text-blue-800',
+                        'dodge': 'bg-green-100 text-green-800',
+                        'construction.com': 'bg-purple-100 text-purple-800',
+                        'nyc.opendata': 'bg-yellow-100 text-yellow-800',
+                        'shovels.ai': 'bg-pink-100 text-pink-800',
+                        'default': 'bg-gray-100 text-gray-800'
+                    };
+                    return classes[source] || classes.default;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

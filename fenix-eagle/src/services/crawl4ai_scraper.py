@@ -753,13 +753,16 @@ class Crawl4AIScraper:
                 if len(text) < 50:  # Skip short text
                     continue
 
+                # Try to extract a proper SAM.gov URL from the HTML element
+                source_url = self._extract_sam_gov_url_from_element(item)
+
                 # Create basic tender data
                 tender = TenderData(
                     id=str(uuid.uuid4()),
                     title=text[:100] + "..." if len(text) > 100 else text,
                     description=text[:500] + "..." if len(text) > 500 else text,
                     source=TenderSource.SAM_GOV,
-                    source_url="https://sam.gov",
+                    source_url=source_url,
                     posting_date=datetime.now(),
                     response_deadline=datetime.now() + timedelta(days=30),
                     estimated_value=None,
@@ -1053,3 +1056,70 @@ class Crawl4AIScraper:
             return ", ".join(filter(None, parts))
         else:
             return str(location_data) if location_data else ""
+
+    def _extract_sam_gov_url_from_element(self, element) -> str:
+        """Extract proper SAM.gov URL from HTML element"""
+        try:
+            # If element is a BeautifulSoup element
+            if hasattr(element, "find"):
+                # Look for links within the element
+                links = element.find_all("a", href=True)
+                for link in links:
+                    href = link["href"]
+                    if "sam.gov" in href and "/opp/" in href:
+                        # Found a direct SAM.gov opportunity link
+                        if href.startswith("http"):
+                            return href
+                        else:
+                            return f"https://sam.gov{href}" if href.startswith("/") else f"https://sam.gov/{href}"
+
+                # Look for solicitation numbers in the text or data attributes
+                text_content = element.get_text() if hasattr(element, "get_text") else str(element)
+                solicitation_match = self._extract_solicitation_number_from_text(text_content)
+                if solicitation_match:
+                    return f"https://sam.gov/opp/{solicitation_match}"
+
+                # Check for data attributes that might contain URLs or IDs
+                if hasattr(element, "get"):
+                    for attr in ["data-url", "data-link", "data-id", "data-solicitation"]:
+                        attr_value = element.get(attr)
+                        if attr_value:
+                            if "sam.gov" in attr_value:
+                                return attr_value if attr_value.startswith("http") else f"https://sam.gov{attr_value}"
+                            elif len(attr_value) > 5:  # Likely a solicitation number
+                                return f"https://sam.gov/opp/{attr_value}"
+
+            # If element is just text, try to extract solicitation number
+            else:
+                text_content = str(element)
+                solicitation_match = self._extract_solicitation_number_from_text(text_content)
+                if solicitation_match:
+                    return f"https://sam.gov/opp/{solicitation_match}"
+
+        except Exception as e:
+            logger.warning(f"Error extracting SAM.gov URL from element: {e}")
+
+        # Fallback to base SAM.gov URL
+        return "https://sam.gov"
+
+    def _extract_solicitation_number_from_text(self, text: str) -> str:
+        """Extract solicitation number from text using regex patterns"""
+        import re
+
+        # Common patterns for SAM.gov solicitation numbers
+        patterns = [
+            r"[A-Z0-9]{2,}-[A-Z0-9]{2,}-[A-Z0-9]{2,}",  # Pattern like ABC-123-DEF
+            r"[A-Z]{2,}[0-9]{3,}[A-Z0-9]*",  # Pattern like ABC123456
+            r"Solicitation\s*(?:Number|ID|#):\s*([A-Z0-9\-]{5,})",  # Explicit solicitation labels
+            r"RFP\s*(?:Number|#):\s*([A-Z0-9\-]{5,})",  # RFP numbers
+            r"IFB\s*(?:Number|#):\s*([A-Z0-9\-]{5,})",  # IFB numbers
+            r"([A-Z0-9\-]{10,})",  # Any alphanumeric string of 10+ chars
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                # Return the first capture group if it exists, otherwise the whole match
+                return match.group(1) if match.groups() else match.group(0)
+
+        return None
