@@ -672,11 +672,18 @@ class Crawl4AIScraper:
                 posted_date = self._parse_date(item.get("postedDate", item.get("posted_date")))
                 response_deadline = self._parse_date(item.get("responseDeadLine", item.get("response_deadline")))
 
-                # Build opportunity URL
+                # Build opportunity URL with correct SAM.gov format
+                # SAM.gov uses workspace URLs: https://sam.gov/workspace/contract/opp/{uuid}/view
+                opportunity_id = item.get("noticeId", item.get("id", item.get("opportunityId", "")))
                 solicitation_number = item.get("solicitationNumber", item.get("solicitation_number", ""))
-                opportunity_url = (
-                    f"https://sam.gov/opp/{solicitation_number}" if solicitation_number else "https://sam.gov"
-                )
+
+                if opportunity_id:
+                    opportunity_url = f"https://sam.gov/workspace/contract/opp/{opportunity_id}/view"
+                elif solicitation_number:
+                    # Fallback: try to search by solicitation number
+                    opportunity_url = f"https://sam.gov/search/?index=_all&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bvalue%5D={solicitation_number}"
+                else:
+                    opportunity_url = "https://sam.gov"
 
                 # Calculate relevance score
                 relevance_score = self._calculate_relevance(title, description, keywords)
@@ -1077,7 +1084,8 @@ class Crawl4AIScraper:
                 text_content = element.get_text() if hasattr(element, "get_text") else str(element)
                 solicitation_match = self._extract_solicitation_number_from_text(text_content)
                 if solicitation_match:
-                    return f"https://sam.gov/opp/{solicitation_match}"
+                    # Use search URL as fallback since we don't have the UUID
+                    return f"https://sam.gov/search/?index=_all&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bvalue%5D={solicitation_match}"
 
                 # Check for data attributes that might contain URLs or IDs
                 if hasattr(element, "get"):
@@ -1087,14 +1095,15 @@ class Crawl4AIScraper:
                             if "sam.gov" in attr_value:
                                 return attr_value if attr_value.startswith("http") else f"https://sam.gov{attr_value}"
                             elif len(attr_value) > 5:  # Likely a solicitation number
-                                return f"https://sam.gov/opp/{attr_value}"
+                                return f"https://sam.gov/search/?index=_all&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bvalue%5D={attr_value}"
 
             # If element is just text, try to extract solicitation number
             else:
                 text_content = str(element)
                 solicitation_match = self._extract_solicitation_number_from_text(text_content)
                 if solicitation_match:
-                    return f"https://sam.gov/opp/{solicitation_match}"
+                    # Use search URL as fallback since we don't have the UUID
+                    return f"https://sam.gov/search/?index=_all&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bvalue%5D={solicitation_match}"
 
         except Exception as e:
             logger.warning(f"Error extracting SAM.gov URL from element: {e}")
