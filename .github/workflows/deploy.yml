@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
     - name: Checkout code
@@ -53,12 +54,12 @@ jobs:
           fi
 
           # Check if project directory exists, create if not
-          if [ ! -d /root/fenix ]; then
+          if [ ! -d /root/FENIX ]; then
             cd /root
-            git clone https://github.com/${{ github.repository }}.git fenix
-            cd fenix
+            git clone https://github.com/${{ github.repository }}.git FENIX
+            cd FENIX
           else
-            cd /root/fenix
+            cd /root/FENIX
             git pull origin main
           fi
 
@@ -114,8 +115,10 @@ jobs:
           docker volume create fenix_redis_data || true
 
           # Build and start services (force rebuild without cache)
-          docker compose build --no-cache
-          docker compose up -d --force-recreate
+          echo "$(date): Building Docker images..." >> /var/log/fenix-deploy.log
+          docker compose build --no-cache 2>&1 | tee -a /var/log/fenix-deploy.log
+          echo "$(date): Starting services..." >> /var/log/fenix-deploy.log
+          docker compose up -d --force-recreate 2>&1 | tee -a /var/log/fenix-deploy.log
 
           # Wait for database to be healthy
           echo "$(date): Waiting for database to be healthy..." >> /var/log/fenix-deploy.log
