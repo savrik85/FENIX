@@ -246,7 +246,7 @@
                         <div x-show="selectedTender?.keywords_found?.length > 0">
                             <h4 class="text-sm font-medium text-gray-500">Nalezená klíčová slova</h4>
                             <div class="mt-1 flex flex-wrap gap-2">
-                                <template x-for="keyword in selectedTender.keywords_found">
+                                <template x-for="keyword in (selectedTender?.keywords_found || [])">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" x-text="keyword"></span>
                                 </template>
                             </div>
@@ -310,7 +310,8 @@
                     const response = await fetch('http://69.55.55.8:8001/scrape/jobs');
                     if (!response.ok) throw new Error('Failed to load tenders');
 
-                    const jobs = await response.json();
+                    const data = await response.json();
+                    const jobs = data.jobs || []; // Extract jobs array from response
                     this.allTenders = [];
 
                     for (const job of jobs) {
