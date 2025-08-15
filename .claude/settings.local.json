@@ -53,6 +53,7 @@
       "Bash(pkill:*)",
       "Bash(python:*)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

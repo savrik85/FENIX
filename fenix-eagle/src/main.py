@@ -519,6 +519,35 @@ async def get_monitoring_statistics():
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+@app.post("/database/fix-schema")
+async def fix_database_schema():
+    """Fix database schema issues"""
+    try:
+        from sqlalchemy import text
+
+        from .database.models import engine
+
+        with engine.connect() as conn:
+            # Add missing send_empty_reports column
+            try:
+                conn.execute(
+                    text(
+                        "ALTER TABLE monitoring_configs ADD COLUMN IF NOT EXISTS "
+                        "send_empty_reports BOOLEAN DEFAULT FALSE"
+                    )
+                )
+                conn.commit()
+                logger.info("Added send_empty_reports column successfully")
+            except Exception as e:
+                logger.warning(f"Column may already exist: {e}")
+
+            return {"success": True, "message": "Database schema fixed"}
+
+    except Exception as e:
+        logger.error(f"Error fixing database schema: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
 # Email generation endpoints
 class EmailGenerationRequest(BaseModel):
     tender_id: str = Field(..., description="ID of the tender to generate email for")

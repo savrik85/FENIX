@@ -215,7 +215,7 @@ async def _daily_tender_scan_async():
                         # Check if we should send empty report for this config
                         if (
                             hasattr(config, "send_empty_reports")
-                            and config.send_empty_reports
+                            and getattr(config, "send_empty_reports", False)
                             and config.email_recipients
                         ):
                             try:
