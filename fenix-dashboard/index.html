@@ -307,7 +307,7 @@
                 },
 
                 async loadTenders() {
-                    const response = await fetch('http://69.55.55.8:8001/tenders?limit=100');
+                    const response = await fetch('http://69.55.55.8:8001/scrape/results/all');
                     if (!response.ok) throw new Error('Failed to load tenders');
 
                     const data = await response.json();

@@ -177,8 +177,47 @@ async def get_scraping_status(job_id: str):
 
 @app.get("/scrape/results/{job_id}", response_model=TenderResponse)
 async def get_scraping_results(job_id: str):
-    """Get results of a completed scraping job"""
+    """Get results of a completed scraping job or all tenders from database"""
     try:
+        if job_id == "all":
+            # Special case: return all tenders from database
+            from sqlalchemy import desc
+
+            from .database.models import SessionLocal, StoredTender
+
+            db = SessionLocal()
+            try:
+                tenders = db.query(StoredTender).order_by(desc(StoredTender.created_at)).limit(100).all()
+
+                tender_list = []
+                for tender in tenders:
+                    tender_data = TenderData(
+                        tender_id=tender.tender_id or str(tender.id),
+                        title=tender.title,
+                        description=tender.description or "",
+                        source=tender.source,
+                        source_url=tender.source_url or "",
+                        posting_date=tender.posting_date or tender.created_at,
+                        response_deadline=tender.response_deadline,
+                        estimated_value=tender.estimated_value,
+                        location=tender.location,
+                        naics_codes=tender.naics_codes or [],
+                        keywords_found=tender.keywords_found or [],
+                        relevance_score=tender.relevance_score,
+                        contact_info=tender.contact_info or {},
+                        requirements=tender.requirements or [],
+                        extracted_data=tender.extracted_data or {},
+                        created_at=tender.created_at or tender.posting_date,
+                    )
+                    tender_list.append(tender_data)
+
+                return TenderResponse(
+                    job_id="all", tenders=tender_list, total_count=len(tender_list), status="completed"
+                )
+            finally:
+                db.close()
+
+        # Normal case: get specific job results
         if not scraper_service:
             raise HTTPException(status_code=503, detail="Scraper service not initialized")
 
@@ -470,55 +509,6 @@ async def get_monitoring_statistics():
 
     except Exception as e:
         logger.error(f"Error getting monitoring stats: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
-
-
-@app.get("/tenders")
-async def get_all_tenders(limit: int = 100, offset: int = 0):
-    """Get all stored tenders from database"""
-    try:
-        from sqlalchemy import desc
-
-        from .database.models import SessionLocal, StoredTender
-
-        db = SessionLocal()
-        try:
-            # Get tenders from database with pagination
-            query = db.query(StoredTender).order_by(desc(StoredTender.created_at))
-            total_count = query.count()
-            tenders = query.offset(offset).limit(limit).all()
-
-            # Convert to response format
-            tender_list = []
-            for tender in tenders:
-                tender_data = {
-                    "tender_id": tender.tender_id,
-                    "title": tender.title,
-                    "description": tender.description,
-                    "source": tender.source,
-                    "source_url": tender.source_url,
-                    "posting_date": tender.posting_date.isoformat() if tender.posting_date else None,
-                    "response_deadline": tender.response_deadline.isoformat() if tender.response_deadline else None,
-                    "estimated_value": tender.estimated_value,
-                    "location": tender.location,
-                    "naics_codes": tender.naics_codes or [],
-                    "keywords_found": tender.keywords_found or [],
-                    "relevance_score": tender.relevance_score,
-                    "contact_info": tender.contact_info or {},
-                    "requirements": tender.requirements or [],
-                    "extracted_data": tender.extracted_data or {},
-                    "created_at": tender.created_at.isoformat() if tender.created_at else None,
-                    "updated_at": tender.updated_at.isoformat() if tender.updated_at else None,
-                }
-                tender_list.append(tender_data)
-
-            return {"tenders": tender_list, "total_count": total_count, "limit": limit, "offset": offset}
-
-        finally:
-            db.close()
-
-    except Exception as e:
-        logger.error(f"Error getting tenders: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
