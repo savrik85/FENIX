@@ -709,7 +709,7 @@
                         });
 
                         if (!response.ok) {
-                            throw new Error('Failed to generate email');
+                            throw new Error('Email API není ještě dostupné - deployment probíhá');
                         }
 
                         const result = await response.json();
@@ -723,7 +723,7 @@
 
                     } catch (error) {
                         console.error('Error generating email:', error);
-                        alert('Chyba při generování emailu: ' + error.message);
+                        alert('⚠️ ' + error.message + '\n\nZkuste to za chvilku znovu - nové API endpointy se právě nasazují.');
                     } finally {
                         this.generatingEmail = false;
                     }

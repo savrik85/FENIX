@@ -308,6 +308,7 @@ Email us – our team is ready to assist you!
                         "estimated_value": tender_data.get("estimated_value"),
                     },
                     status="generated",
+                    email_metadata={},
                 )
 
                 db.add(generated_email)

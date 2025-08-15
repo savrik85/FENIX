@@ -112,7 +112,7 @@ class GeneratedEmail(Base):
     contact_info = Column(JSONB, default=dict)  # Recipient details
     tender_info = Column(JSONB, default=dict)  # Snapshot of tender data used
     status = Column(String(20), default="generated", index=True)  # generated/sent/failed
-    metadata = Column(JSONB, default=dict)  # Additional data
+    email_metadata = Column(JSONB, default=dict)  # Additional data
 
 
 # Database engine and session
