@@ -3,6 +3,8 @@ from datetime import datetime
 from difflib import SequenceMatcher
 from typing import Any
 
+from sqlalchemy import func
+
 from ..config import settings
 from ..database.models import StoredTender, get_db
 
@@ -375,13 +377,13 @@ class DeduplicationService:
         try:
             # Get counts by source
             source_counts = (
-                db.query(StoredTender.source, db.func.count(StoredTender.id).label("count"))
+                db.query(StoredTender.source, func.count(StoredTender.id).label("count"))
                 .group_by(StoredTender.source)
                 .all()
             )
 
             # Get average relevance scores
-            avg_relevance = db.query(db.func.avg(StoredTender.relevance_score)).scalar()
+            avg_relevance = db.query(func.avg(StoredTender.relevance_score)).scalar()
 
             # Get notification statistics
             notified_count = db.query(StoredTender).filter(StoredTender.is_notified.is_(True)).count()
