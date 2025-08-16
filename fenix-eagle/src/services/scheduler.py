@@ -6,7 +6,7 @@ from celery import Celery
 from celery.schedules import crontab
 
 from ..config import settings
-from ..database.models import MonitoringConfig, get_db
+from ..database.models import MonitoringConfig, ScanLog, get_db
 from .deduplication_service import DeduplicationService
 from .email_service import EmailService
 from .http_client_service import EagleServiceClient
@@ -74,16 +74,32 @@ def daily_tender_scan(self):
         raise e
 
 
-async def _daily_tender_scan_async():
+async def _daily_tender_scan_async(scan_type="scheduled", triggered_by="system"):
     """
     Async implementation of daily tender scan
     """
+    from datetime import datetime
+
     db = next(get_db())
     deduplication_service = DeduplicationService()
     email_service = EmailService()
 
     total_new_tenders = 0
     scan_results = []
+    scan_start_time = datetime.now()
+
+    # Create initial scan log
+    scan_log = ScanLog(
+        config_name="all_configs",
+        scan_type=scan_type,
+        started_at=scan_start_time,
+        triggered_by=triggered_by,
+        status="running",
+    )
+    db.add(scan_log)
+    db.commit()
+
+    logger.info(f"Started scan {scan_log.id} at {scan_start_time}")
 
     try:
         # Use HTTP client to communicate with Eagle service in separate container
@@ -246,24 +262,54 @@ async def _daily_tender_scan_async():
                             }
                         )
 
+            # Update scan log with successful completion
+            scan_end_time = datetime.now()
+            duration = (scan_end_time - scan_start_time).total_seconds()
+
+            scan_log.completed_at = scan_end_time
+            scan_log.duration_seconds = duration
+            scan_log.status = "completed"
+            scan_log.tenders_found = sum(r.get("total_found", 0) for r in scan_results)
+            scan_log.new_tenders = total_new_tenders
+            scan_log.relevant_tenders = total_new_tenders
+            scan_log.sources_scanned = list({r.get("source") for r in scan_results if r.get("source")})
+            scan_log.sources_configured = list({source for config in monitoring_configs for source in config.sources})
+            scan_log.keywords_used = list({keyword for config in monitoring_configs for keyword in config.keywords})
+
+            db.commit()
+
             result = {
                 "status": "completed",
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": scan_end_time.isoformat(),
                 "total_new_tenders": total_new_tenders,
                 "configs_processed": len(monitoring_configs),
                 "scan_results": scan_results,
+                "scan_log_id": str(scan_log.id),
+                "duration_seconds": duration,
             }
 
-            logger.info(f"Daily scan completed successfully: {total_new_tenders} new tenders found")
+            logger.info(f"Daily scan completed successfully: {total_new_tenders} new tenders found in {duration:.1f}s")
             return result
 
     except Exception as e:
-        logger.error(f"Daily scan failed: {str(e)}")
+        # Update scan log with failure
+        scan_end_time = datetime.now()
+        duration = (scan_end_time - scan_start_time).total_seconds()
+
+        scan_log.completed_at = scan_end_time
+        scan_log.duration_seconds = duration
+        scan_log.status = "failed"
+        scan_log.error_message = str(e)
+        db.commit()
+
+        logger.error(f"Daily scan failed after {duration:.1f}s: {str(e)}")
         raise e
     finally:
         # Cleanup resources
-        await http_client.cleanup()
-        db.close()
+        if "http_client" in locals():
+            await http_client.cleanup()
+        if "db" in locals():
+            db.close()
 
 
 # _wait_for_job_completion function removed - now handled by HTTPClientService
@@ -373,7 +419,7 @@ def manual_tender_scan(config_name: str = None):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-        result = loop.run_until_complete(_manual_scan_async(config_name))
+        result = loop.run_until_complete(_daily_tender_scan_async(scan_type="manual", triggered_by="api"))
 
         logger.info(f"Manual scan completed: {result}")
         return result

@@ -5,6 +5,7 @@ from sqlalchemy import (
     Column,
     DateTime,
     Float,
+    Integer,
     String,
     Text,
     create_engine,
@@ -95,6 +96,42 @@ class NotificationLog(Base):
     success = Column(Boolean, default=True)
     error_message = Column(Text)
     notification_metadata = Column(JSONB, default=dict)
+
+
+class ScanLog(Base):
+    """Log of monitoring scans for tracking and debugging"""
+
+    __tablename__ = "scan_logs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    config_name = Column(String(255), nullable=False, index=True)
+    scan_type = Column(String(50), default="scheduled", index=True)  # scheduled/manual/triggered
+    started_at = Column(DateTime, nullable=False, index=True)
+    completed_at = Column(DateTime, index=True)
+    duration_seconds = Column(Float)
+    status = Column(String(20), default="running", index=True)  # running/completed/failed/cancelled
+
+    # Results
+    sources_scanned = Column(JSONB, default=list)  # List of sources that were scanned
+    tenders_found = Column(Integer, default=0)
+    new_tenders = Column(Integer, default=0)
+    duplicate_tenders = Column(Integer, default=0)
+    relevant_tenders = Column(Integer, default=0)
+    notifications_sent = Column(Integer, default=0)
+
+    # Configuration snapshot
+    keywords_used = Column(JSONB, default=list)
+    sources_configured = Column(JSONB, default=list)
+    filters_applied = Column(JSONB, default=dict)
+
+    # Error handling
+    error_message = Column(Text)
+    warnings = Column(JSONB, default=list)
+    failed_sources = Column(JSONB, default=list)
+
+    # Metadata
+    triggered_by = Column(String(100))  # user_id, "system", "api", etc.
+    scan_metadata = Column(JSONB, default=dict)
 
 
 class GeneratedEmail(Base):

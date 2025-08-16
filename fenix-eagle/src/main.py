@@ -548,6 +548,178 @@ async def fix_database_schema():
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+# Monitoring and Scan Log endpoints
+@app.get("/monitoring/scan-logs")
+async def get_scan_logs(limit: int = 20, status: str = None, config_name: str = None):
+    """Get scan log history for monitoring"""
+    try:
+        from .database.models import ScanLog, SessionLocal
+
+        db = SessionLocal()
+        try:
+            query = db.query(ScanLog).order_by(ScanLog.started_at.desc())
+
+            # Apply filters
+            if status:
+                query = query.filter(ScanLog.status == status)
+            if config_name:
+                query = query.filter(ScanLog.config_name == config_name)
+
+            logs = query.limit(limit).all()
+
+            scan_logs = []
+            for log in logs:
+                scan_logs.append(
+                    {
+                        "id": str(log.id),
+                        "config_name": log.config_name,
+                        "scan_type": log.scan_type,
+                        "started_at": log.started_at.isoformat() if log.started_at else None,
+                        "completed_at": log.completed_at.isoformat() if log.completed_at else None,
+                        "duration_seconds": log.duration_seconds,
+                        "status": log.status,
+                        "tenders_found": log.tenders_found or 0,
+                        "new_tenders": log.new_tenders or 0,
+                        "relevant_tenders": log.relevant_tenders or 0,
+                        "sources_scanned": log.sources_scanned or [],
+                        "sources_configured": log.sources_configured or [],
+                        "keywords_used": log.keywords_used or [],
+                        "error_message": log.error_message,
+                        "warnings": log.warnings or [],
+                        "triggered_by": log.triggered_by,
+                    }
+                )
+
+            return {"scan_logs": scan_logs, "total_count": len(scan_logs)}
+
+        finally:
+            db.close()
+
+    except Exception as e:
+        logger.error(f"Error getting scan logs: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.get("/monitoring/scan-logs/{scan_id}")
+async def get_scan_log_detail(scan_id: str):
+    """Get detailed information about a specific scan"""
+    try:
+        from uuid import UUID
+
+        from .database.models import ScanLog, SessionLocal
+
+        db = SessionLocal()
+        try:
+            log = db.query(ScanLog).filter(ScanLog.id == UUID(scan_id)).first()
+            if not log:
+                raise HTTPException(status_code=404, detail="Scan log not found")
+
+            return {
+                "id": str(log.id),
+                "config_name": log.config_name,
+                "scan_type": log.scan_type,
+                "started_at": log.started_at.isoformat() if log.started_at else None,
+                "completed_at": log.completed_at.isoformat() if log.completed_at else None,
+                "duration_seconds": log.duration_seconds,
+                "status": log.status,
+                "tenders_found": log.tenders_found or 0,
+                "new_tenders": log.new_tenders or 0,
+                "duplicate_tenders": log.duplicate_tenders or 0,
+                "relevant_tenders": log.relevant_tenders or 0,
+                "notifications_sent": log.notifications_sent or 0,
+                "sources_scanned": log.sources_scanned or [],
+                "sources_configured": log.sources_configured or [],
+                "keywords_used": log.keywords_used or [],
+                "filters_applied": log.filters_applied or {},
+                "error_message": log.error_message,
+                "warnings": log.warnings or [],
+                "failed_sources": log.failed_sources or [],
+                "triggered_by": log.triggered_by,
+                "scan_metadata": log.scan_metadata or {},
+            }
+
+        finally:
+            db.close()
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail="Invalid scan ID format") from e
+    except Exception as e:
+        logger.error(f"Error getting scan log detail: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.get("/monitoring/scan-stats")
+async def get_scan_statistics():
+    """Get scanning statistics for dashboard"""
+    try:
+        from datetime import datetime, timedelta
+
+        from sqlalchemy import func
+
+        from .database.models import ScanLog, SessionLocal
+
+        db = SessionLocal()
+        try:
+            # Recent scan stats (last 7 days)
+            week_ago = datetime.now() - timedelta(days=7)
+
+            # Latest scan
+            latest_scan = db.query(ScanLog).order_by(ScanLog.started_at.desc()).first()
+
+            # Counts by status (last 7 days)
+            status_counts = (
+                db.query(ScanLog.status, func.count(ScanLog.id))
+                .filter(ScanLog.started_at >= week_ago)
+                .group_by(ScanLog.status)
+                .all()
+            )
+
+            # Daily stats (last 7 days)
+            daily_stats = (
+                db.query(
+                    func.date(ScanLog.started_at).label("date"),
+                    func.count(ScanLog.id).label("scan_count"),
+                    func.sum(ScanLog.new_tenders).label("total_new_tenders"),
+                    func.avg(ScanLog.duration_seconds).label("avg_duration"),
+                )
+                .filter(ScanLog.started_at >= week_ago)
+                .group_by(func.date(ScanLog.started_at))
+                .order_by("date")
+                .all()
+            )
+
+            return {
+                "latest_scan": {
+                    "id": str(latest_scan.id) if latest_scan else None,
+                    "started_at": latest_scan.started_at.isoformat()
+                    if latest_scan and latest_scan.started_at
+                    else None,
+                    "status": latest_scan.status if latest_scan else None,
+                    "new_tenders": latest_scan.new_tenders if latest_scan else 0,
+                    "duration_seconds": latest_scan.duration_seconds if latest_scan else 0,
+                }
+                if latest_scan
+                else None,
+                "status_counts": dict(status_counts),
+                "daily_stats": [
+                    {
+                        "date": stat.date.isoformat() if stat.date else None,
+                        "scan_count": stat.scan_count or 0,
+                        "total_new_tenders": stat.total_new_tenders or 0,
+                        "avg_duration": float(stat.avg_duration) if stat.avg_duration else 0,
+                    }
+                    for stat in daily_stats
+                ],
+            }
+
+        finally:
+            db.close()
+
+    except Exception as e:
+        logger.error(f"Error getting scan statistics: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
 # Email generation endpoints
 class EmailGenerationRequest(BaseModel):
     tender_id: str = Field(..., description="ID of the tender to generate email for")
