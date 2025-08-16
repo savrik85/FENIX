@@ -105,20 +105,34 @@ jobs:
           fi
 
           # Run deployment with modern docker compose
-          echo "$(date): Starting FENIX deployment with monitoring..." >> /var/log/fenix-deploy.log
+          echo "$(date): Starting FENIX deployment with data preservation..." >> /var/log/fenix-deploy.log
 
-          # Stop services
-          docker compose down || true
-
-          # Create volumes if needed
+          # Create volumes if needed (before any operations)
           docker volume create fenix_postgres_data || true
           docker volume create fenix_redis_data || true
 
-          # Build and start services (force rebuild without cache)
+          # CRITICAL: Create database backup before any changes
+          echo "$(date): Creating database backup..." >> /var/log/fenix-deploy.log
+          if docker compose ps postgres | grep -q "Up"; then
+            mkdir -p /root/fenix-backups
+            BACKUP_FILE="/root/fenix-backups/fenix-backup-$(date +%Y%m%d-%H%M%S).sql"
+            docker compose exec -T postgres pg_dump -U fenix fenix > "$BACKUP_FILE" 2>/dev/null || echo "Backup failed - continuing deployment"
+            echo "$(date): Database backed up to $BACKUP_FILE" >> /var/log/fenix-deploy.log
+          fi
+
+          # Build new images WITHOUT stopping database
           echo "$(date): Building Docker images..." >> /var/log/fenix-deploy.log
           docker compose build --no-cache 2>&1 | tee -a /var/log/fenix-deploy.log
-          echo "$(date): Starting services..." >> /var/log/fenix-deploy.log
-          docker compose up -d --force-recreate 2>&1 | tee -a /var/log/fenix-deploy.log
+
+          # SAFE DEPLOYMENT: Rolling update without destroying database
+          echo "$(date): Performing rolling update..." >> /var/log/fenix-deploy.log
+
+          # Stop only application services, KEEP database running
+          docker compose stop eagle gateway core oracle shield archer bolt dashboard 2>&1 | tee -a /var/log/fenix-deploy.log || true
+
+          # Start services with new images (database keeps running)
+          echo "$(date): Starting updated services..." >> /var/log/fenix-deploy.log
+          docker compose up -d 2>&1 | tee -a /var/log/fenix-deploy.log
 
           # Wait for database to be healthy
           echo "$(date): Waiting for database to be healthy..." >> /var/log/fenix-deploy.log
@@ -135,11 +149,23 @@ jobs:
           # Check all services
           docker compose ps
 
-          # Test monitoring system
+          # Test monitoring system and verify data integrity
           sleep 10
-          curl -s http://localhost:8001/health || echo "Eagle service not responding"
+          if curl -s http://localhost:8001/health > /dev/null; then
+            echo "$(date): Eagle service is healthy" >> /var/log/fenix-deploy.log
 
-          echo "$(date): Deployment completed with monitoring system!" >> /var/log/fenix-deploy.log
+            # Check if we have data in database
+            TENDER_COUNT=$(curl -s http://localhost:8001/monitoring/stats | grep -o '"total_tenders":[0-9]*' | cut -d':' -f2 || echo "0")
+            echo "$(date): Database contains $TENDER_COUNT tenders after deployment" >> /var/log/fenix-deploy.log
+
+            if [ "$TENDER_COUNT" = "0" ] && [ -n "$(ls /root/fenix-backups/*.sql 2>/dev/null | tail -1)" ]; then
+              echo "$(date): WARNING - No tenders found after deployment! Latest backup available for restore." >> /var/log/fenix-deploy.log
+            fi
+          else
+            echo "$(date): ERROR - Eagle service not responding after deployment!" >> /var/log/fenix-deploy.log
+          fi
+
+          echo "$(date): Deployment completed with data preservation!" >> /var/log/fenix-deploy.log
 
     - name: Notify deployment status
       if: always()
