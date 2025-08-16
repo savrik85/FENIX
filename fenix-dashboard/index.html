@@ -341,57 +341,81 @@
         </div>
 
         <!-- Emails Section -->
-        <div x-show="activeTab === 'emails'" class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
+        <div x-show="activeTab === 'emails'" class="fenix-card rounded-xl shadow-2xl overflow-hidden">
+            <div class="px-6 py-6 border-b border-fenix-fire/20">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-lg font-semibold text-gray-800">Vygenerované emaily</h2>
-                        <p class="text-sm text-gray-600 mt-1" x-text="'Celkem ' + allEmails.length + ' emailů'"></p>
+                        <h2 class="text-2xl font-bold text-white flex items-center space-x-3">
+                            <svg class="w-8 h-8 text-fenix-ember" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            <span>Vygenerované emaily</span>
+                        </h2>
+                        <p class="text-orange-300 mt-2 font-medium" x-text="'Celkem ' + allEmails.length + ' emailů'"></p>
                     </div>
-                    <button @click="refreshEmails()"
-                            class="bg-fenix-blue hover:bg-fenix-light text-white px-4 py-2 rounded-lg transition duration-200"
-                            :disabled="loading">
-                        <span x-show="!loading">Obnovit emaily</span>
-                        <span x-show="loading">Načítání...</span>
-                    </button>
+                    <div class="flex items-center space-x-4">
+                        <button @click="refreshEmails()"
+                                class="bg-fire-gradient hover:shadow-lg hover:shadow-fenix-fire/50 text-fenix-dark px-6 py-3 rounded-lg transition-all duration-300 font-semibold fenix-glow"
+                                :disabled="loading">
+                            <span x-show="!loading" class="flex items-center space-x-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                                <span>Obnovit</span>
+                            </span>
+                            <span x-show="loading" class="flex items-center space-x-2">
+                                <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-dasharray="32" stroke-dashoffset="32">
+                                        <animate attributeName="stroke-dashoffset" dur="1s" values="32;0" repeatCount="indefinite"/>
+                                    </circle>
+                                </svg>
+                                <span>Načítání...</span>
+                            </span>
+                        </button>
+                        <p class="text-orange-300 text-sm">Pro generování emailů klikněte na "Detail" u tendru a pak "Generovat obchodní email"</p>
+                    </div>
                 </div>
             </div>
 
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full divide-y divide-fenix-fire/20">
+                    <thead class="bg-gradient-to-r from-fenix-ash to-fenix-smoke">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Předmět</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tender</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vygenerováno</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AI Model</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Akce</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-orange-300 uppercase tracking-wider">Předmět</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-orange-300 uppercase tracking-wider">Tender</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-orange-300 uppercase tracking-wider">Vygenerováno</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-orange-300 uppercase tracking-wider">AI Model</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-orange-300 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-orange-300 uppercase tracking-wider">Akce</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <template x-for="email in allEmails" :key="email.email_id">
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4">
-                                    <div class="text-sm font-medium text-gray-900" x-text="email.subject.substring(0, 50) + (email.subject.length > 50 ? '...' : '')"></div>
+                    <tbody class="divide-y divide-fenix-fire/10">
+                        <template x-for="email in allEmails" :key="email.id">
+                            <tr class="hover:bg-fenix-fire/5 transition-all duration-300 group">
+                                <td class="px-6 py-5">
+                                    <div class="text-sm font-semibold text-white group-hover:text-fenix-ember transition-colors" x-text="email.email_subject ? email.email_subject.substring(0, 50) + (email.email_subject.length > 50 ? '...' : '') : 'Bez předmětu'"></div>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-sm text-gray-900" x-text="email.tender_info?.title?.substring(0, 40) + (email.tender_info?.title?.length > 40 ? '...' : '') || email.tender_id"></div>
-                                    <div class="text-sm text-gray-500" x-text="email.tender_info?.location || 'Neurčeno'"></div>
+                                <td class="px-6 py-5">
+                                    <div class="text-sm font-medium text-white" x-text="email.tender_info?.title?.substring(0, 40) + (email.tender_info?.title?.length > 40 ? '...' : '') || email.tender_id"></div>
+                                    <div class="text-sm text-orange-300" x-text="email.tender_info?.location || 'Neurčeno'"></div>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-900" x-text="formatDate(email.generated_at)"></td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800" x-text="email.ai_model || 'N/A'"></span>
+                                <td class="px-6 py-5 text-sm text-orange-200 font-medium" x-text="formatDate(email.generated_at)"></td>
+                                <td class="px-6 py-5">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-500/20 text-purple-400 border border-purple-500/50" x-text="email.ai_model_used || 'N/A'"></span>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                <td class="px-6 py-5">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border"
                                           :class="getEmailStatusClass(email.status)" x-text="email.status"></span>
                                 </td>
-                                <td class="px-6 py-4 text-sm font-medium space-x-2">
+                                <td class="px-6 py-5 text-sm font-semibold space-x-2">
                                     <button @click="showEmailDetail(email)"
-                                            class="text-fenix-blue hover:text-fenix-light">Zobrazit</button>
+                                            class="bg-fenix-ember hover:bg-fenix-fire text-fenix-dark px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-fenix-ember/30 transition-all duration-300 font-bold">
+                                        Zobrazit
+                                    </button>
                                     <button @click="copyEmailToClipboard(email)"
-                                            class="text-green-600 hover:text-green-500">Kopírovat</button>
+                                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-300 font-bold">
+                                        Kopírovat
+                                    </button>
                                 </td>
                             </tr>
                         </template>
@@ -400,72 +424,77 @@
             </div>
 
             <!-- Empty state for emails -->
-            <div x-show="allEmails.length === 0 && !loading" class="text-center py-12">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div x-show="allEmails.length === 0 && !loading" class="text-center py-16">
+                <svg class="mx-auto h-12 w-12 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">Žádné emaily</h3>
-                <p class="mt-1 text-sm text-gray-500">Zatím nebyly vygenerovány žádné emaily.</p>
+                <h3 class="mt-4 text-lg font-bold text-white">Žádné emaily nenalezeny</h3>
+                <p class="mt-1 text-sm text-orange-300">Zatím nebyly vygenerovány žádné emaily. Použijte tlačítko "Generovat email" v detailu tendru.</p>
             </div>
 
             <!-- Loading state for emails -->
             <div x-show="loading && activeTab === 'emails'" class="text-center py-12">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-fenix-blue"></div>
-                <p class="mt-2 text-sm text-gray-500">Načítání emailů...</p>
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-fenix-fire"></div>
+                <p class="mt-2 text-sm text-orange-300">Načítání emailů...</p>
             </div>
         </div>
 
         <!-- Email Detail Modal -->
         <div x-show="showEmailModal" x-transition class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
             <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showEmailModal = false"></div>
+                <div class="fixed inset-0 bg-fenix-dark bg-opacity-90 transition-opacity backdrop-blur-sm" @click="showEmailModal = false"></div>
 
-                <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full sm:p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">Detail emailu</h3>
-                        <button @click="showEmailModal = false" class="text-gray-400 hover:text-gray-600">
+                <div class="inline-block align-bottom fenix-card rounded-xl px-6 pt-6 pb-6 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-2xl font-bold text-white flex items-center space-x-3">
+                            <svg class="w-6 h-6 text-fenix-ember" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            <span>Detail emailu</span>
+                        </h3>
+                        <button @click="showEmailModal = false" class="text-orange-300 hover:text-fenix-fire transition-colors">
                             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
                     </div>
 
-                    <div x-show="selectedEmail" class="space-y-4">
+                    <div x-show="selectedEmail" class="space-y-6">
                         <div>
-                            <h4 class="text-sm font-medium text-gray-500">Předmět</h4>
-                            <p class="mt-1 text-sm text-gray-900" x-text="selectedEmail?.subject"></p>
+                            <h4 class="text-sm font-medium text-orange-300 mb-2">Předmět</h4>
+                            <p class="text-sm text-white font-medium" x-text="selectedEmail?.email_subject || 'Bez předmětu'"></p>
                         </div>
 
                         <div>
-                            <h4 class="text-sm font-medium text-gray-500">Obsah emailu</h4>
-                            <div class="mt-1 p-3 bg-gray-50 rounded-lg">
-                                <pre class="whitespace-pre-wrap text-sm text-gray-900" x-text="selectedEmail?.content"></pre>
+                            <h4 class="text-sm font-medium text-orange-300 mb-2">Obsah emailu</h4>
+                            <div class="bg-fenix-ash rounded-lg p-4 border border-fenix-fire/20">
+                                <pre class="whitespace-pre-wrap text-sm text-white" x-text="selectedEmail?.email_content || selectedEmail?.content"></pre>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <h4 class="text-sm font-medium text-gray-500">Tender</h4>
-                                <p class="mt-1 text-sm text-gray-900" x-text="selectedEmail?.tender_info?.title || selectedEmail?.tender_id"></p>
+                                <h4 class="text-sm font-medium text-orange-300 mb-2">Tender</h4>
+                                <p class="text-sm text-white" x-text="selectedEmail?.tender_info?.title || selectedEmail?.tender_id"></p>
                             </div>
                             <div>
-                                <h4 class="text-sm font-medium text-gray-500">AI Model</h4>
-                                <p class="mt-1 text-sm text-gray-900" x-text="selectedEmail?.ai_model || 'N/A'"></p>
+                                <h4 class="text-sm font-medium text-orange-300 mb-2">AI Model</h4>
+                                <p class="text-sm text-white" x-text="selectedEmail?.ai_model_used || selectedEmail?.ai_model || 'N/A'"></p>
                             </div>
                             <div>
-                                <h4 class="text-sm font-medium text-gray-500">Vygenerováno</h4>
-                                <p class="mt-1 text-sm text-gray-900" x-text="selectedEmail?.generated_at ? formatDate(selectedEmail.generated_at) : 'N/A'"></p>
+                                <h4 class="text-sm font-medium text-orange-300 mb-2">Vygenerováno</h4>
+                                <p class="text-sm text-white" x-text="selectedEmail?.generated_at ? formatDate(selectedEmail.generated_at) : 'N/A'"></p>
                             </div>
                             <div>
-                                <h4 class="text-sm font-medium text-gray-500">Status</h4>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                <h4 class="text-sm font-medium text-orange-300 mb-2">Status</h4>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border"
                                       :class="getEmailStatusClass(selectedEmail?.status)" x-text="selectedEmail?.status"></span>
                             </div>
                         </div>
 
-                        <div class="pt-4 border-t">
+                        <div class="pt-6 border-t border-fenix-fire/20">
                             <button @click="copyEmailToClipboard(selectedEmail)"
-                                    class="bg-fenix-blue hover:bg-fenix-light text-white px-4 py-2 rounded-lg transition duration-200">
+                                    class="bg-fire-gradient hover:shadow-lg hover:shadow-fenix-fire/50 text-fenix-dark px-6 py-3 rounded-lg transition-all duration-300 font-semibold fenix-glow">
                                 Kopírovat do schránky
                             </button>
                         </div>
@@ -929,11 +958,11 @@
 
                 getEmailStatusClass(status) {
                     const classes = {
-                        'generated': 'bg-green-100 text-green-800',
-                        'sent': 'bg-blue-100 text-blue-800',
-                        'failed': 'bg-red-100 text-red-800',
-                        'generation_only': 'bg-yellow-100 text-yellow-800',
-                        'default': 'bg-gray-100 text-gray-800'
+                        'generated': 'bg-green-500/20 text-green-400 border-green-500/50',
+                        'sent': 'bg-blue-500/20 text-blue-400 border-blue-500/50',
+                        'failed': 'bg-red-500/20 text-red-400 border-red-500/50',
+                        'generation_only': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50',
+                        'default': 'bg-gray-500/20 text-gray-400 border-gray-500/50'
                     };
                     return classes[status] || classes.default;
                 },
