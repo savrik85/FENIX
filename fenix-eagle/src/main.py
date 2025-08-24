@@ -961,6 +961,57 @@ async def auth_status():
     }
 
 
+@app.get("/debug/acc")
+async def debug_acc():
+    """Debug ACC API access - get projects and detailed info"""
+    try:
+        from .services.acc_scraper import ACCClient
+
+        client = ACCClient()
+
+        # Test authentication
+        auth_result = await client.authenticate()
+        if not auth_result:
+            return {"error": "Authentication failed", "auth_result": False}
+
+        # Get projects
+        projects = await client.get_projects()
+
+        result = {
+            "auth_result": auth_result,
+            "access_token": client.access_token[:20] + "..." if client.access_token else None,
+            "projects_count": len(projects),
+            "projects": projects[:3],  # First 3 projects for debugging
+        }
+
+        # If we have projects, try to get data from first one
+        if projects:
+            first_project = projects[0]
+            project_id = first_project.get("id")
+
+            if project_id:
+                issues = await client.get_project_issues(project_id)
+                rfis = await client.get_project_rfis(project_id)
+                files = await client.search_project_files(project_id, ["window", "door"])
+
+                result["first_project_data"] = {
+                    "project_id": project_id,
+                    "project_name": first_project.get("attributes", {}).get("name", "Unknown"),
+                    "issues_count": len(issues),
+                    "rfis_count": len(rfis),
+                    "files_count": len(files),
+                    "sample_issues": issues[:1] if issues else [],
+                    "sample_rfis": rfis[:1] if rfis else [],
+                    "sample_files": files[:1] if files else [],
+                }
+
+        return result
+
+    except Exception as e:
+        logger.error(f"ACC debug error: {e}")
+        return {"error": str(e), "type": type(e).__name__}
+
+
 if __name__ == "__main__":
     import uvicorn
 
