@@ -103,23 +103,37 @@ class ACCClient:
                     data = response.json()
                     hubs = data.get("data", [])
                     logger.info(f"Retrieved {len(hubs)} hubs from Autodesk")
+                    logger.info(f"Hubs data sample: {hubs[:1] if hubs else 'No hubs'}")
 
                     # For each hub, get projects
                     all_projects = []
                     for hub in hubs:
                         hub_id = hub.get("id")
+                        hub_name = hub.get("attributes", {}).get("name", "Unknown Hub")
+                        logger.info(f"Processing hub: {hub_name} ({hub_id})")
+
                         if hub_id:
                             projects_url = f"{self.base_url}/project/v1/hubs/{hub_id}/projects"
+                            logger.info(f"Fetching projects from: {projects_url}")
                             projects_response = await client.get(projects_url, headers=headers, timeout=30.0)
+
                             if projects_response.status_code == 200:
                                 projects_data = projects_response.json()
                                 projects = projects_data.get("data", [])
                                 all_projects.extend(projects)
                                 logger.info(f"Retrieved {len(projects)} projects from hub {hub_id}")
+                                if projects:
+                                    logger.info(f"Sample project: {projects[0] if projects else 'None'}")
+                            else:
+                                logger.warning(
+                                    f"Failed to get projects from hub {hub_id}: "
+                                    f"{projects_response.status_code} - {projects_response.text}"
+                                )
 
+                    logger.info(f"Total projects collected: {len(all_projects)}")
                     return all_projects
                 else:
-                    logger.error(f"Failed to get projects: {response.status_code} - {response.text}")
+                    logger.error(f"Failed to get hubs: {response.status_code} - {response.text}")
                     return []
 
         except Exception as e:
@@ -250,14 +264,20 @@ class ACCScraper:
 
         if not self.client.client_id or not self.client.client_secret:
             logger.error("ACC credentials not configured")
+            logger.error(f"client_id: {self.client.client_id[:10] if self.client.client_id else 'None'}...")
+            logger.error(f"client_secret: {self.client.client_secret[:10] if self.client.client_secret else 'None'}...")
             return []
 
         try:
             # Get all projects
+            logger.info("Calling get_projects()...")
             projects = await self.client.get_projects()
+            logger.info(f"get_projects() returned {len(projects)} projects")
 
             if not projects:
-                logger.warning("No projects found in ACC account")
+                logger.warning(
+                    "No projects found in ACC account - this may be normal if account has no active projects"
+                )
                 return []
 
             all_results = []
