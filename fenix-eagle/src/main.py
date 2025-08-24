@@ -1,4 +1,6 @@
+import json
 import logging
+import os
 import secrets
 import urllib.parse
 from contextlib import asynccontextmanager
@@ -870,6 +872,23 @@ oauth_states = {}
 oauth_tokens = {}
 
 
+# Load saved OAuth token on startup
+def load_saved_token():
+    try:
+        token_file = "/tmp/autodesk_token.json"
+        if os.path.exists(token_file):
+            with open(token_file) as f:
+                token_info = json.load(f)
+                oauth_tokens["autodesk"] = token_info
+                logger.info("Loaded saved OAuth token")
+    except Exception as e:
+        logger.warning(f"Could not load saved token: {e}")
+
+
+# Load token on startup
+load_saved_token()
+
+
 @app.get("/auth/autodesk")
 async def autodesk_auth():
     """Initiate Autodesk OAuth flow"""
@@ -917,6 +936,16 @@ async def autodesk_callback(code: str, state: str):
         if response.status_code == 200:
             token_info = response.json()
             oauth_tokens["autodesk"] = token_info
+
+            # Save token to file so it persists across restarts
+            try:
+                token_file = "/tmp/autodesk_token.json"
+                with open(token_file, "w") as f:
+                    json.dump(token_info, f)
+                logger.info(f"OAuth token saved to {token_file}")
+            except Exception as e:
+                logger.error(f"Failed to save token: {e}")
+
             return {"status": "success", "message": "Authorization successful! You can now use ACC scraping."}
         else:
             logger.error(f"Token exchange failed: {response.text}")
