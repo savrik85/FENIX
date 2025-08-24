@@ -1,10 +1,13 @@
 import logging
+import secrets
+import urllib.parse
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 
 from .config import settings
@@ -860,6 +863,73 @@ async def get_email_statistics():
     except Exception as e:
         logger.error(f"Error getting email statistics: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+# Global storage for OAuth states and tokens (in production, use Redis)
+oauth_states = {}
+oauth_tokens = {}
+
+
+@app.get("/auth/autodesk")
+async def autodesk_auth():
+    """Initiate Autodesk OAuth flow"""
+    state = secrets.token_urlsafe(32)
+    oauth_states[state] = True
+
+    auth_url = (
+        f"https://developer.api.autodesk.com/authentication/v2/authorize"
+        f"?response_type=code"
+        f"&client_id={settings.autodesk_client_id}"
+        f"&redirect_uri={urllib.parse.quote('https://69.55.55.8:8001/auth/callback')}"
+        f"&scope={urllib.parse.quote('data:read data:write account:read account:write user-profile:read')}"
+        f"&state={state}"
+    )
+
+    return RedirectResponse(url=auth_url)
+
+
+@app.get("/auth/callback")
+async def autodesk_callback(code: str, state: str):
+    """Handle Autodesk OAuth callback"""
+    import httpx
+
+    if state not in oauth_states:
+        raise HTTPException(status_code=400, detail="Invalid state")
+
+    del oauth_states[state]
+
+    # Exchange code for token
+    async with httpx.AsyncClient() as client:
+        token_data = {
+            "grant_type": "authorization_code",
+            "client_id": settings.autodesk_client_id,
+            "client_secret": settings.autodesk_client_secret,
+            "code": code,
+            "redirect_uri": "https://69.55.55.8:8001/auth/callback",
+        }
+
+        response = await client.post(
+            "https://developer.api.autodesk.com/authentication/v2/token",
+            data=token_data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+
+        if response.status_code == 200:
+            token_info = response.json()
+            oauth_tokens["autodesk"] = token_info
+            return {"status": "success", "message": "Authorization successful! You can now use ACC scraping."}
+        else:
+            logger.error(f"Token exchange failed: {response.text}")
+            raise HTTPException(status_code=400, detail="Token exchange failed")
+
+
+@app.get("/auth/status")
+async def auth_status():
+    """Check if user is authenticated with Autodesk"""
+    return {
+        "authenticated": "autodesk" in oauth_tokens,
+        "token_expires": oauth_tokens.get("autodesk", {}).get("expires_in", 0),
+    }
 
 
 if __name__ == "__main__":

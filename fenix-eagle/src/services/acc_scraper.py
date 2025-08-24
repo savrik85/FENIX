@@ -29,8 +29,20 @@ class ACCClient:
         logger.info(f"ACC Client initialized - account_id: {self.account_id[:10] if self.account_id else 'None'}...")
 
     async def authenticate(self) -> bool:
-        """Authenticate with Autodesk API using 2-legged OAuth"""
+        """Authenticate with Autodesk API using existing OAuth token or 2-legged fallback"""
         try:
+            # Try to get OAuth token from main app
+            from ..main import oauth_tokens
+
+            if "autodesk" in oauth_tokens:
+                token_info = oauth_tokens["autodesk"]
+                self.access_token = token_info.get("access_token")
+                expires_in = token_info.get("expires_in", 3600)
+                self.token_expires_at = datetime.now() + timedelta(seconds=expires_in)
+                logger.info("Using OAuth token from 3-legged authentication")
+                return True
+
+            # Fallback to 2-legged OAuth
             async with httpx.AsyncClient() as client:
                 auth_data = {
                     "grant_type": "client_credentials",
@@ -48,7 +60,7 @@ class ACCClient:
                     self.access_token = token_data.get("access_token")
                     expires_in = token_data.get("expires_in", 3600)
                     self.token_expires_at = datetime.now() + timedelta(seconds=expires_in)
-                    logger.info("Successfully authenticated with Autodesk API")
+                    logger.info("Successfully authenticated with Autodesk API using 2-legged OAuth")
                     return True
                 else:
                     logger.error(f"Authentication failed: {response.status_code} - {response.text}")
