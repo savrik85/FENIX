@@ -961,6 +961,76 @@ async def auth_status():
     }
 
 
+@app.post("/acc/create-project")
+async def create_acc_project(project_name: str = "FENIX Test Project"):
+    """Create a test project in ACC"""
+    try:
+        from .services.acc_scraper import ACCClient
+
+        client = ACCClient()
+
+        # Test authentication first
+        auth_result = await client.authenticate()
+        if not auth_result:
+            return {"error": "Authentication failed", "auth_result": False}
+
+        # Create project via ACC API
+        import httpx
+
+        async with httpx.AsyncClient() as http_client:
+            headers = {
+                "Authorization": f"Bearer {client.access_token}",
+                "Content-Type": "application/json",
+            }
+
+            # First, get hubs to find where to create project
+            hubs_response = await http_client.get(f"{client.base_url}/project/v1/hubs", headers=headers)
+
+            if hubs_response.status_code != 200:
+                return {"error": f"Failed to get hubs: {hubs_response.text}"}
+
+            hubs_data = hubs_response.json()
+            hubs = hubs_data.get("data", [])
+
+            if not hubs:
+                return {"error": "No hubs found - cannot create project"}
+
+            # Use first hub
+            hub_id = hubs[0].get("id")
+            hub_name = hubs[0].get("attributes", {}).get("name", "Unknown")
+
+            # Create project
+            project_data = {
+                "jsonapi": {"version": "1.0"},
+                "data": {
+                    "type": "projects",
+                    "attributes": {"name": project_name, "project_type": "construction", "status": "active"},
+                },
+            }
+
+            create_response = await http_client.post(
+                f"{client.base_url}/project/v1/hubs/{hub_id}/projects", headers=headers, json=project_data
+            )
+
+            if create_response.status_code in [200, 201]:
+                project_info = create_response.json()
+                return {
+                    "success": True,
+                    "message": f"Project '{project_name}' created successfully",
+                    "hub_name": hub_name,
+                    "project": project_info.get("data", {}),
+                }
+            else:
+                return {
+                    "error": f"Failed to create project: {create_response.status_code}",
+                    "details": create_response.text,
+                    "hub_name": hub_name,
+                }
+
+    except Exception as e:
+        return {"error": str(e), "type": type(e).__name__}
+
+
 @app.get("/debug/acc")
 async def debug_acc():
     """Debug ACC API access - get projects and detailed info"""
