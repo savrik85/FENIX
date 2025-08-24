@@ -82,16 +82,30 @@ class ACCClient:
                     "Content-Type": "application/json",
                 }
 
-                # Get projects from ACC
-                url = f"{self.base_url}/construction/admin/v1/accounts/{self.account_id}/projects"
+                # Get projects from ACC using Project API
+                url = f"{self.base_url}/project/v1/hubs"
 
                 response = await client.get(url, headers=headers, timeout=30.0)
 
                 if response.status_code == 200:
                     data = response.json()
-                    projects = data.get("results", [])
-                    logger.info(f"Retrieved {len(projects)} projects from ACC")
-                    return projects
+                    hubs = data.get("data", [])
+                    logger.info(f"Retrieved {len(hubs)} hubs from Autodesk")
+
+                    # For each hub, get projects
+                    all_projects = []
+                    for hub in hubs:
+                        hub_id = hub.get("id")
+                        if hub_id:
+                            projects_url = f"{self.base_url}/project/v1/hubs/{hub_id}/projects"
+                            projects_response = await client.get(projects_url, headers=headers, timeout=30.0)
+                            if projects_response.status_code == 200:
+                                projects_data = projects_response.json()
+                                projects = projects_data.get("data", [])
+                                all_projects.extend(projects)
+                                logger.info(f"Retrieved {len(projects)} projects from hub {hub_id}")
+
+                    return all_projects
                 else:
                     logger.error(f"Failed to get projects: {response.status_code} - {response.text}")
                     return []
