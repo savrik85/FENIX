@@ -34,6 +34,13 @@ class Settings(BaseSettings):
     # Dodge Construction API
     dodge_api_key: str | None = None
 
+    # Autodesk Construction Cloud API
+    autodesk_client_id: str | None = None
+    autodesk_client_secret: str | None = None
+    autodesk_account_id: str | None = None
+    autodesk_email: str | None = None
+    autodesk_password: str | None = None
+
     # Security
     secret_key: str = "your_secret_key_here_minimum_32_characters"
     jwt_secret_key: str = "your_jwt_secret_key_here"
@@ -81,8 +88,9 @@ class Settings(BaseSettings):
     notification_retention_days: int = 60
 
     class Config:
-        env_file = ".env"
+        env_file = "../.env"  # .env is in parent directory
         case_sensitive = False
+        extra = "ignore"  # Ignore extra fields in .env
 
 
 settings = Settings()

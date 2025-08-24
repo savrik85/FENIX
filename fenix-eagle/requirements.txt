@@ -33,3 +33,6 @@ jinja2>=3.1.2
 # Development tools
 ruff>=0.1.8
 pre-commit>=3.6.0
+
+# Autodesk Construction Cloud API
+requests-oauthlib>=1.3.1

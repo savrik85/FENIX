@@ -67,7 +67,7 @@ app.add_middleware(
 class ScrapingRequest(BaseModel):
     source: str = Field(
         ...,
-        description="Scraping source (e.g., 'sam.gov', 'dodge', 'construction.com', 'nyc.opendata', 'shovels.ai')",
+        description="Scraping source (sam.gov, dodge, construction.com, nyc.opendata, shovels.ai, autodesk_acc)",
     )
     keywords: list[str] = Field(default=[], description="Keywords to search for")
     filters: dict[str, Any] = Field(default={}, description="Additional filters")
@@ -112,6 +112,7 @@ async def root():
             "Construction.com integration",
             "NYC Open Data integration",
             "Shovels AI integration",
+            "Autodesk Construction Cloud integration",
             "Mock data for testing",
         ],
         "endpoints": {
@@ -339,6 +340,18 @@ async def get_available_sources():
                     "contractor_id",
                     "permit_type",
                     "date_range",
+                ],
+                "status": "available",
+            },
+            {
+                "id": "autodesk_acc",
+                "name": "Autodesk Construction Cloud",
+                "description": "Construction project data, issues, RFIs, and documents",
+                "supported_filters": [
+                    "project_id",
+                    "keywords",
+                    "data_types",
+                    "location",
                 ],
                 "status": "available",
             },

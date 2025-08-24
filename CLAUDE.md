@@ -146,3 +146,9 @@ SAM_GOV_API_KEY=your_sam_gov_key
 GOOGLE_CREDENTIALS_FILE=credentials.json
 ASANA_ACCESS_TOKEN=your_asana_token
 ```
+
+
+ssh to dev server:
+```bash
+ssh root@69.55.55.8 password: Daw123Ai
+```

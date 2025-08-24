@@ -51,7 +51,9 @@
       "Bash(python:*)",
       "Bash(cat:*)",
       "Bash(pkill:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "WebFetch(domain:aps.autodesk.com)",
+      "WebSearch"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

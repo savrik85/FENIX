@@ -6,6 +6,7 @@ from typing import Any
 from loguru import logger
 
 from ..models.tender_models import ScrapingJob, ScrapingStatus, TenderData, TenderSource
+from .acc_scraper import ACCScraper
 from .crawl4ai_scraper import Crawl4AIScraper
 
 
@@ -15,6 +16,7 @@ class ScraperService:
         self.results: dict[str, list[TenderData]] = {}
         self.is_initialized = False
         self.crawl4ai_scraper = None
+        self.acc_scraper = None
 
     async def initialize(self):
         """Initialize the scraper service"""
@@ -23,6 +25,10 @@ class ScraperService:
         # Initialize Crawl4AI scraper
         self.crawl4ai_scraper = Crawl4AIScraper()
         await self.crawl4ai_scraper.initialize()
+
+        # Initialize ACC scraper
+        self.acc_scraper = ACCScraper()
+        await self.acc_scraper.initialize()
 
         self.is_initialized = True
         logger.info("ScraperService initialized successfully")
@@ -34,6 +40,10 @@ class ScraperService:
         # Cleanup Crawl4AI scraper
         if self.crawl4ai_scraper:
             await self.crawl4ai_scraper.cleanup()
+
+        # Cleanup ACC scraper
+        if self.acc_scraper:
+            await self.acc_scraper.cleanup()
 
         self.is_initialized = False
 
@@ -117,6 +127,8 @@ class ScraperService:
             results = await self._scrape_nyc_opendata(job)
         elif job.source == TenderSource.SHOVELS_AI:
             results = await self._scrape_shovels_ai(job)
+        elif job.source == TenderSource.AUTODESK_ACC:
+            results = await self._scrape_autodesk_acc(job)
         else:
             raise ValueError(f"Unsupported source: {job.source}")
 
@@ -224,6 +236,24 @@ class ScraperService:
 
         except Exception as e:
             logger.error(f"Error in Shovels AI scraping: {e}")
+            return []
+
+    async def _scrape_autodesk_acc(self, job: ScrapingJob) -> list[TenderData]:
+        """Scrape Autodesk Construction Cloud for project data"""
+        logger.info(f"Scraping Autodesk ACC with keywords: {job.keywords}")
+
+        try:
+            if self.acc_scraper:
+                # Use ACC scraper
+                results = await self.acc_scraper.scrape_acc_data(keywords=job.keywords, max_results=job.max_results)
+                logger.info(f"ACC scraper returned {len(results)} results")
+                return results
+            else:
+                logger.error("ACC scraper not available")
+                return []
+
+        except Exception as e:
+            logger.error(f"Error in ACC scraping: {e}")
             return []
 
     async def get_job_status(self, job_id: str) -> dict[str, Any] | None:
