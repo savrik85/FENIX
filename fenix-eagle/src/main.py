@@ -880,7 +880,7 @@ async def autodesk_auth():
         f"https://developer.api.autodesk.com/authentication/v2/authorize"
         f"?response_type=code"
         f"&client_id={settings.autodesk_client_id}"
-        f"&redirect_uri={urllib.parse.quote('https://69.55.55.8:8001/auth/callback')}"
+        f"&redirect_uri={urllib.parse.quote('http://69.55.55.8:8001/auth/callback')}"
         f"&scope={urllib.parse.quote('data:read data:write account:read account:write user-profile:read')}"
         f"&state={state}"
     )
@@ -905,7 +905,7 @@ async def autodesk_callback(code: str, state: str):
             "client_id": settings.autodesk_client_id,
             "client_secret": settings.autodesk_client_secret,
             "code": code,
-            "redirect_uri": "https://69.55.55.8:8001/auth/callback",
+            "redirect_uri": "http://69.55.55.8:8001/auth/callback",
         }
 
         response = await client.post(
