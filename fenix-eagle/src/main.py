@@ -360,6 +360,18 @@ async def get_available_sources():
                 ],
                 "status": "available",
             },
+            {
+                "id": "building_connected",
+                "name": "BuildingConnected",
+                "description": "Construction bidding and tender opportunities platform",
+                "supported_filters": [
+                    "keywords",
+                    "location",
+                    "bid_date",
+                    "trade",
+                ],
+                "status": "available",
+            },
         ]
     }
 
