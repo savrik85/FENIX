@@ -96,16 +96,26 @@ class BuildingConnectedClient:
                     "https://api.buildingconnected.com/v2/opportunities",
                 ]
 
+                response = None
                 for url in urls_to_try:
                     logger.info(f"Trying to fetch opportunities from: {url}")
-                    response = await client.get(url, headers=headers, timeout=30.0)
+                    try:
+                        response = await client.get(url, headers=headers, timeout=30.0)
+                        logger.info(f"Response status: {response.status_code}")
 
-                    if response.status_code == 200:
-                        break
-                    else:
-                        logger.warning(f"Failed with {url}: {response.status_code}")
+                        if response.status_code == 200:
+                            logger.info(f"Success with {url}")
+                            break
+                        elif response.status_code == 401:
+                            logger.error(f"Authentication failed for {url}")
+                        elif response.status_code == 403:
+                            logger.error(f"Access forbidden for {url} - may need Pro account or additional permissions")
+                        else:
+                            logger.warning(f"Failed with {url}: {response.status_code} - {response.text[:200]}")
+                    except Exception as e:
+                        logger.error(f"Error accessing {url}: {e}")
 
-                if response.status_code == 200:
+                if response and response.status_code == 200:
                     data = response.json()
                     logger.info(f"Response keys: {data.keys() if isinstance(data, dict) else 'Not a dict'}")
 
