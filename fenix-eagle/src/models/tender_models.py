@@ -20,6 +20,7 @@ class TenderSource(str, Enum):
     NYC_OPEN_DATA = "nyc.opendata"
     SHOVELS_AI = "shovels.ai"
     AUTODESK_ACC = "autodesk_acc"
+    BUILDING_CONNECTED = "building_connected"
     CUSTOM = "custom"
 
 

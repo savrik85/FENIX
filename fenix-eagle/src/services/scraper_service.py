@@ -7,6 +7,7 @@ from loguru import logger
 
 from ..models.tender_models import ScrapingJob, ScrapingStatus, TenderData, TenderSource
 from .acc_scraper import ACCScraper
+from .buildingconnected_scraper import BuildingConnectedScraper
 from .crawl4ai_scraper import Crawl4AIScraper
 
 
@@ -17,6 +18,7 @@ class ScraperService:
         self.is_initialized = False
         self.crawl4ai_scraper = None
         self.acc_scraper = None
+        self.buildingconnected_scraper = None
 
     async def initialize(self):
         """Initialize the scraper service"""
@@ -29,6 +31,10 @@ class ScraperService:
         # Initialize ACC scraper
         self.acc_scraper = ACCScraper()
         await self.acc_scraper.initialize()
+
+        # Initialize BuildingConnected scraper
+        self.buildingconnected_scraper = BuildingConnectedScraper()
+        # BuildingConnected doesn't need initialization
 
         self.is_initialized = True
         logger.info("ScraperService initialized successfully")
@@ -129,6 +135,8 @@ class ScraperService:
             results = await self._scrape_shovels_ai(job)
         elif job.source == TenderSource.AUTODESK_ACC:
             results = await self._scrape_autodesk_acc(job)
+        elif job.source == TenderSource.BUILDING_CONNECTED:
+            results = await self._scrape_building_connected(job)
         else:
             raise ValueError(f"Unsupported source: {job.source}")
 
@@ -254,6 +262,26 @@ class ScraperService:
 
         except Exception as e:
             logger.error(f"Error in ACC scraping: {e}")
+            return []
+
+    async def _scrape_building_connected(self, job: ScrapingJob) -> list[TenderData]:
+        """Scrape BuildingConnected for tender/bid opportunities"""
+        logger.info(f"Scraping BuildingConnected with keywords: {job.keywords}")
+
+        try:
+            if self.buildingconnected_scraper:
+                # Use BuildingConnected scraper
+                results = await self.buildingconnected_scraper.scrape_buildingconnected_data(
+                    keywords=job.keywords, max_results=job.max_results
+                )
+                logger.info(f"BuildingConnected scraper returned {len(results)} results")
+                return results
+            else:
+                logger.error("BuildingConnected scraper not available")
+                return []
+
+        except Exception as e:
+            logger.error(f"Error in BuildingConnected scraping: {e}")
             return []
 
     async def get_job_status(self, job_id: str) -> dict[str, Any] | None:
