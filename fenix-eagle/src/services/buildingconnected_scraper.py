@@ -76,9 +76,43 @@ class BuildingConnectedClient:
         return True
 
     async def get_opportunities(self) -> list[dict[str, Any]]:
-        """Get opportunities from BuildingConnected - API not available, return empty list"""
-        logger.error("BuildingConnected API is not available - no public API exists")
-        return []
+        """Get opportunities from BuildingConnected API"""
+        if not await self.ensure_authenticated():
+            raise Exception("Failed to authenticate")
+
+        try:
+            async with httpx.AsyncClient() as client:
+                headers = {
+                    "Authorization": f"Bearer {self.access_token}",
+                    "Content-Type": "application/json",
+                }
+
+                # Use correct BuildingConnected API endpoint
+                url = f"{self.bc_base_url}/v2/opportunities"
+                logger.info(f"Fetching opportunities from: {url}")
+
+                response = await client.get(url, headers=headers, timeout=30.0)
+                logger.info(f"Response status: {response.status_code}")
+
+                if response.status_code == 200:
+                    data = response.json()
+                    opportunities = data.get("results", data.get("data", []))
+                    logger.info(f"Retrieved {len(opportunities)} opportunities from BuildingConnected")
+                    return opportunities
+                elif response.status_code == 403:
+                    logger.error("BuildingConnected API access forbidden - requires Bid Board Pro subscription")
+                    logger.error("Please upgrade to Bid Board Pro to access opportunities data")
+                    return []
+                elif response.status_code == 401:
+                    logger.error("BuildingConnected authentication failed - please re-authorize")
+                    return []
+                else:
+                    logger.error(f"BuildingConnected API error: {response.status_code} - {response.text}")
+                    return []
+
+        except Exception as e:
+            logger.error(f"Error getting BuildingConnected opportunities: {e}")
+            return []
 
     async def get_opportunity_details(self, opportunity_id: str) -> dict[str, Any]:
         """Get detailed information about a specific opportunity"""
