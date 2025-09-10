@@ -75,77 +75,10 @@ class BuildingConnectedClient:
             return await self.authenticate()
         return True
 
-    async def get_opportunities_via_web_scraping(self) -> list[dict[str, Any]]:
-        """Get opportunities from BuildingConnected via web scraping since API is not available"""
-        logger.info("BuildingConnected API not available - using web scraping approach")
-
-        # Create mock opportunities based on what we saw in the UI
-        mock_opportunities = [
-            {
-                "id": "pre-solicitation-glass-glazing",
-                "name": "Pre-Solicitation - Glass & Glazing",
-                "description": "Glass & Glazing project in California",
-                "location": {"address": "California"},
-                "project_size": "2,000 sq. ft.",
-                "trade": "Glass & Glazing",
-                "status": "undecided",
-                "created_at": "2025-09-10T00:00:00Z",
-            },
-            {
-                "id": "us-bank-minot-nd",
-                "name": "US Bank Minot, ND",
-                "description": "Glass & Glazing project in North Dakota",
-                "location": {"address": "Minot, North Dakota"},
-                "project_size": "1,812 sq. ft.",
-                "trade": "Glass & Glazing",
-                "status": "undecided",
-                "created_at": "2025-09-10T00:00:00Z",
-            },
-            {
-                "id": "kc-46a-additions",
-                "name": "KC-46A Additions",
-                "description": "Glass & Glazing additions project",
-                "location": {"address": "Tampa, Florida"},
-                "trade": "Glass & Glazing",
-                "status": "undecided",
-                "created_at": "2025-09-10T00:00:00Z",
-            },
-            {
-                "id": "repair-storm-damage",
-                "name": "Repair Storm Damage",
-                "description": "Door repair project after storm damage",
-                "location": {"address": "Tampa, Florida"},
-                "trade": "Doors",
-                "status": "undecided",
-                "created_at": "2025-09-10T00:00:00Z",
-            },
-            {
-                "id": "longhorn-steakhouse",
-                "name": "Longhorn Steakhouse",
-                "description": "Storefront construction project",
-                "location": {"address": "Weldon, North Carolina"},
-                "project_size": "5,780 sq. ft.",
-                "trade": "Storefronts",
-                "status": "undecided",
-                "created_at": "2025-09-10T00:00:00Z",
-            },
-            {
-                "id": "q2-2025-milender",
-                "name": "Q2 2025 Milender",
-                "description": "Glass & Glazing Storefront project",
-                "location": {"address": "Unknown"},
-                "trade": "Glass & Glazing Storefronts",
-                "status": "undecided",
-                "created_at": "2025-09-10T00:00:00Z",
-            },
-        ]
-
-        logger.info(f"Returning {len(mock_opportunities)} mock opportunities from BuildingConnected")
-        return mock_opportunities
-
     async def get_opportunities(self) -> list[dict[str, Any]]:
-        """Get opportunities from BuildingConnected - API not available, using mock data"""
-        return await self.get_opportunities_via_web_scraping()
+        """Get opportunities from BuildingConnected - API not available, return empty list"""
+        logger.error("BuildingConnected API is not available - no public API exists")
+        return []
 
     async def get_opportunity_details(self, opportunity_id: str) -> dict[str, Any]:
         """Get detailed information about a specific opportunity"""
