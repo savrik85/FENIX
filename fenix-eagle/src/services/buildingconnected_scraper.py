@@ -88,14 +88,34 @@ class BuildingConnectedClient:
                 }
 
                 # Get opportunities from BuildingConnected API
-                url = f"{self.bc_base_url}/v2/opportunities"
-                logger.info(f"Fetching opportunities from: {url}")
+                # Try different endpoints
+                urls_to_try = [
+                    f"{self.bc_base_url}/v2/opportunities",
+                    f"{self.bc_base_url}/v1/opportunities",
+                    f"{self.bc_base_url}/bid-board/opportunities",
+                    "https://api.buildingconnected.com/v2/opportunities",
+                ]
 
-                response = await client.get(url, headers=headers, timeout=30.0)
+                for url in urls_to_try:
+                    logger.info(f"Trying to fetch opportunities from: {url}")
+                    response = await client.get(url, headers=headers, timeout=30.0)
+
+                    if response.status_code == 200:
+                        break
+                    else:
+                        logger.warning(f"Failed with {url}: {response.status_code}")
 
                 if response.status_code == 200:
                     data = response.json()
-                    opportunities = data.get("results", [])
+                    logger.info(f"Response keys: {data.keys() if isinstance(data, dict) else 'Not a dict'}")
+
+                    # Try different response formats
+                    opportunities = []
+                    if isinstance(data, list):
+                        opportunities = data
+                    elif isinstance(data, dict):
+                        opportunities = data.get("results", data.get("data", data.get("opportunities", [])))
+
                     logger.info(f"Retrieved {len(opportunities)} opportunities from BuildingConnected")
 
                     if opportunities:
@@ -103,7 +123,7 @@ class BuildingConnectedClient:
 
                     return opportunities
                 else:
-                    logger.error(f"Failed to get opportunities: {response.status_code} - {response.text}")
+                    logger.error(f"All endpoints failed. Last response: {response.status_code} - {response.text}")
                     return []
 
         except Exception as e:
