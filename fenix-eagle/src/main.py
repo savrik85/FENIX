@@ -601,6 +601,100 @@ async def fix_database_schema():
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+@app.post("/database/cleanup-irrelevant-tenders")
+async def cleanup_irrelevant_tenders(min_relevance_score: float = 0.4):
+    """Remove irrelevant tenders from database based on relevance score and negative keywords"""
+    try:
+        from .database.models import SessionLocal, StoredTender
+
+        # Define negative keywords that indicate irrelevant tenders
+        negative_keywords = [
+            "úklid",
+            "uklid",
+            "cleaning",
+            "mytí",
+            "myti",
+            "washing",
+            "čištění",
+            "cisteni",
+            "dvířka",
+            "dvirka",
+            "kočky",
+            "kocky",
+            "cats",
+            "domácí",
+            "domaci",
+            "pets",
+            "síť",
+            "sit",
+            "net",
+            "ochrannou",
+            "protective",
+            "windows os",
+            "microsoft",
+            "software",
+            "operační systém",
+            "operacni system",
+        ]
+
+        db = SessionLocal()
+        try:
+            # Count tenders before cleanup
+            total_before = db.query(StoredTender).count()
+            logger.info(f"Total tenders before cleanup: {total_before}")
+
+            # Find tenders to delete - low relevance score
+            low_relevance_tenders = (
+                db.query(StoredTender).filter(StoredTender.relevance_score < min_relevance_score).all()
+            )
+
+            # Find tenders with negative keywords in title or description
+            negative_keyword_tenders = []
+            for tender in db.query(StoredTender).all():
+                title_desc = f"{tender.title or ''} {tender.description or ''}".lower()
+                if any(neg_keyword in title_desc for neg_keyword in negative_keywords):
+                    negative_keyword_tenders.append(tender)
+
+            # Combine and deduplicate
+            tenders_to_delete = set()
+            tenders_to_delete.update(low_relevance_tenders)
+            tenders_to_delete.update(negative_keyword_tenders)
+
+            # Delete irrelevant tenders
+            deleted_count = 0
+            for tender in tenders_to_delete:
+                logger.info(f"Deleting irrelevant tender: '{tender.title}' (score: {tender.relevance_score})")
+                db.delete(tender)
+                deleted_count += 1
+
+            # Commit changes
+            db.commit()
+
+            # Count remaining tenders
+            total_after = db.query(StoredTender).count()
+
+            logger.info(f"Cleanup completed: deleted {deleted_count} irrelevant tenders")
+
+            return {
+                "success": True,
+                "message": "Irrelevant tenders cleaned up successfully",
+                "stats": {
+                    "total_before": total_before,
+                    "deleted_count": deleted_count,
+                    "total_after": total_after,
+                    "min_relevance_threshold": min_relevance_score,
+                    "negative_keywords_checked": len(negative_keywords),
+                },
+            }
+
+        finally:
+            db.close()
+
+    except Exception as e:
+        logger.error(f"Error cleaning up irrelevant tenders: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
 # Monitoring and Scan Log endpoints
 @app.get("/monitoring/scan-logs")
 async def get_scan_logs(limit: int = 20, status: str = None, config_name: str = None):
