@@ -21,6 +21,7 @@ class TenderSource(str, Enum):
     SHOVELS_AI = "shovels.ai"
     AUTODESK_ACC = "autodesk_acc"
     BUILDING_CONNECTED = "building_connected"
+    POPTAVKY_CZ = "poptavky.cz"
     CUSTOM = "custom"
 
 

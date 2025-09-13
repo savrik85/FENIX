@@ -5,10 +5,12 @@ from typing import Any
 
 from loguru import logger
 
+from ..config import settings
 from ..models.tender_models import ScrapingJob, ScrapingStatus, TenderData, TenderSource
 from .acc_scraper import ACCScraper
 from .buildingconnected_scraper import BuildingConnectedScraper
 from .crawl4ai_scraper import Crawl4AIScraper
+from .poptavky_cz_scraper import PoptavkyCzAPI
 
 
 class ScraperService:
@@ -19,6 +21,7 @@ class ScraperService:
         self.crawl4ai_scraper = None
         self.acc_scraper = None
         self.buildingconnected_scraper = None
+        self.poptavky_cz_scraper = None
 
     async def initialize(self):
         """Initialize the scraper service"""
@@ -36,6 +39,10 @@ class ScraperService:
         self.buildingconnected_scraper = BuildingConnectedScraper()
         # BuildingConnected doesn't need initialization
 
+        # Initialize Poptavky.cz scraper
+        self.poptavky_cz_scraper = PoptavkyCzAPI()
+        await self.poptavky_cz_scraper.initialize()
+
         self.is_initialized = True
         logger.info("ScraperService initialized successfully")
 
@@ -51,7 +58,25 @@ class ScraperService:
         if self.acc_scraper:
             await self.acc_scraper.cleanup()
 
+        # Cleanup Poptavky.cz scraper
+        if self.poptavky_cz_scraper:
+            await self.poptavky_cz_scraper.cleanup()
+
         self.is_initialized = False
+
+    def _is_source_enabled(self, source: TenderSource) -> bool:
+        """Check if a source is enabled in configuration"""
+        source_mapping = {
+            TenderSource.SAM_GOV: settings.source_sam_gov_enabled,
+            TenderSource.DODGE: settings.source_dodge_enabled,
+            TenderSource.CONSTRUCTION_COM: settings.source_construction_com_enabled,
+            TenderSource.NYC_OPEN_DATA: settings.source_nyc_opendata_enabled,
+            TenderSource.SHOVELS_AI: settings.source_shovels_ai_enabled,
+            TenderSource.AUTODESK_ACC: settings.source_autodesk_acc_enabled,
+            TenderSource.BUILDING_CONNECTED: settings.source_building_connected_enabled,
+            TenderSource.POPTAVKY_CZ: settings.source_poptavky_cz_enabled,
+        }
+        return source_mapping.get(source, False)
 
     async def create_job(
         self,
@@ -68,6 +93,10 @@ class ScraperService:
             source_enum = TenderSource(source)
         except ValueError as e:
             raise ValueError(f"Unsupported source: {source}") from e
+
+        # Check if source is enabled
+        if not self._is_source_enabled(source_enum):
+            raise ValueError(f"Source {source} is currently disabled")
 
         job = ScrapingJob(
             job_id=job_id,
@@ -137,6 +166,8 @@ class ScraperService:
             results = await self._scrape_autodesk_acc(job)
         elif job.source == TenderSource.BUILDING_CONNECTED:
             results = await self._scrape_building_connected(job)
+        elif job.source == TenderSource.POPTAVKY_CZ:
+            results = await self._scrape_poptavky_cz(job)
         else:
             raise ValueError(f"Unsupported source: {job.source}")
 
@@ -282,6 +313,26 @@ class ScraperService:
 
         except Exception as e:
             logger.error(f"Error in BuildingConnected scraping: {e}")
+            return []
+
+    async def _scrape_poptavky_cz(self, job: ScrapingJob) -> list[TenderData]:
+        """Scrape Poptavky.cz for tender opportunities"""
+        logger.info(f"Scraping Poptavky.cz with keywords: {job.keywords}")
+
+        try:
+            if self.poptavky_cz_scraper:
+                # Use Poptavky.cz scraper
+                results = await self.poptavky_cz_scraper.scrape_poptavky_data(
+                    keywords=job.keywords, max_results=job.max_results
+                )
+                logger.info(f"Poptavky.cz scraper returned {len(results)} results")
+                return results
+            else:
+                logger.error("Poptavky.cz scraper not available")
+                return []
+
+        except Exception as e:
+            logger.error(f"Error in Poptavky.cz scraping: {e}")
             return []
 
     async def get_job_status(self, job_id: str) -> dict[str, Any] | None:

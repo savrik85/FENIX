@@ -72,7 +72,10 @@ app.add_middleware(
 class ScrapingRequest(BaseModel):
     source: str = Field(
         ...,
-        description="Scraping source (sam.gov, dodge, construction.com, nyc.opendata, shovels.ai, autodesk_acc)",
+        description=(
+            "Scraping source (sam.gov, dodge, construction.com, nyc.opendata, "
+            "shovels.ai, autodesk_acc, building_connected, poptavky.cz)"
+        ),
     )
     keywords: list[str] = Field(default=[], description="Keywords to search for")
     filters: dict[str, Any] = Field(default={}, description="Additional filters")
@@ -295,7 +298,7 @@ async def crawl_url(
 # Configuration endpoints
 @app.get("/scrape/sources")
 async def get_available_sources():
-    """Get list of available scraping sources"""
+    """Get list of available scraping sources with enable/disable status"""
     return {
         "sources": [
             {
@@ -303,14 +306,16 @@ async def get_available_sources():
                 "name": "SAM.gov",
                 "description": "US Government procurement opportunities",
                 "supported_filters": ["naics_code", "location", "value_range"],
-                "status": "available",
+                "status": "disabled" if not settings.source_sam_gov_enabled else "available",
+                "enabled": settings.source_sam_gov_enabled,
             },
             {
                 "id": "dodge",
                 "name": "Dodge Construction",
                 "description": "Construction project leads",
                 "supported_filters": ["project_type", "location", "value_range"],
-                "status": "mock_data_only",
+                "status": "disabled" if not settings.source_dodge_enabled else "mock_data_only",
+                "enabled": settings.source_dodge_enabled,
             },
             {
                 "id": "construction.com",
@@ -322,7 +327,8 @@ async def get_available_sources():
                     "value_range",
                     "project_stage",
                 ],
-                "status": "available",
+                "status": "disabled" if not settings.source_construction_com_enabled else "available",
+                "enabled": settings.source_construction_com_enabled,
             },
             {
                 "id": "nyc.opendata",
@@ -334,7 +340,8 @@ async def get_available_sources():
                     "work_type",
                     "date_range",
                 ],
-                "status": "available",
+                "status": "disabled" if not settings.source_nyc_opendata_enabled else "available",
+                "enabled": settings.source_nyc_opendata_enabled,
             },
             {
                 "id": "shovels.ai",
@@ -346,7 +353,8 @@ async def get_available_sources():
                     "permit_type",
                     "date_range",
                 ],
-                "status": "available",
+                "status": "disabled" if not settings.source_shovels_ai_enabled else "available",
+                "enabled": settings.source_shovels_ai_enabled,
             },
             {
                 "id": "autodesk_acc",
@@ -358,7 +366,8 @@ async def get_available_sources():
                     "data_types",
                     "location",
                 ],
-                "status": "available",
+                "status": "disabled" if not settings.source_autodesk_acc_enabled else "available",
+                "enabled": settings.source_autodesk_acc_enabled,
             },
             {
                 "id": "building_connected",
@@ -370,7 +379,21 @@ async def get_available_sources():
                     "bid_date",
                     "trade",
                 ],
-                "status": "available",
+                "status": "disabled" if not settings.source_building_connected_enabled else "available",
+                "enabled": settings.source_building_connected_enabled,
+            },
+            {
+                "id": "poptavky.cz",
+                "name": "Poptavky.cz",
+                "description": "Czech tender and procurement opportunities platform",
+                "supported_filters": [
+                    "keywords",
+                    "location",
+                    "category",
+                    "deadline",
+                ],
+                "status": "disabled" if not settings.source_poptavky_cz_enabled else "available",
+                "enabled": settings.source_poptavky_cz_enabled,
             },
         ]
     }

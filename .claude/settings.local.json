@@ -53,7 +53,8 @@
       "Bash(pkill:*)",
       "Bash(python:*)",
       "WebFetch(domain:aps.autodesk.com)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:www.poptavky.cz)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

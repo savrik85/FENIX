@@ -79,6 +79,20 @@ class Settings(BaseSettings):
     daily_scan_minute: int = 0
     min_relevance_score: float = 0.3
 
+    # Source enable/disable flags
+    source_sam_gov_enabled: bool = False
+    source_dodge_enabled: bool = False
+    source_construction_com_enabled: bool = False
+    source_nyc_opendata_enabled: bool = False
+    source_shovels_ai_enabled: bool = False
+    source_autodesk_acc_enabled: bool = False
+    source_building_connected_enabled: bool = False
+    source_poptavky_cz_enabled: bool = True
+
+    # Poptavky.cz credentials
+    poptavky_cz_email: str = "Petr@appyours.cz"
+    poptavky_cz_password: str = "Poptavky123"
+
     # Service Discovery
     eagle_service_url: str = "http://eagle:8001"
 

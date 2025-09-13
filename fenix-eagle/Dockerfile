@@ -40,9 +40,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Playwright browsers without system deps (we already installed them manually)
-RUN playwright install chromium
-
 # Copy application code
 COPY src/ ./src/
 COPY . .
@@ -51,6 +48,9 @@ COPY . .
 RUN adduser --disabled-password --gecos '' --uid 1000 fenix && \
     chown -R fenix:fenix /app
 USER fenix
+
+# Install Playwright browsers as the fenix user
+RUN playwright install chromium
 
 # Expose port
 EXPOSE 8001
