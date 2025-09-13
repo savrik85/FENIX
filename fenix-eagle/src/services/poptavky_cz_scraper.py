@@ -475,10 +475,17 @@ class PoptavkyCzScraper:
 
             # Fenestration-related keywords with weights - focus on installation/construction
             fenestration_keywords = {
-                # Core fenestration terms with installation
+                # Core fenestration terms with installation - HIGHEST PRIORITY
+                "výrobu a montáž": 3.5,  # production and installation
+                "vyroba a montaz": 3.5,
+                "montáž a výroba": 3.5,  # installation and production
+                "montaz a vyroba": 3.5,
                 "montáž oken": 3.0,
                 "montaz oken": 3.0,
+                "montáž dveří": 3.0,  # MISSING - key for door installation
+                "montaz dveri": 3.0,
                 "instalace oken": 3.0,
+                "instalace dveří": 3.0,  # door installation
                 "instalace dveri": 3.0,
                 "výměna oken": 3.0,
                 "vymena oken": 3.0,
@@ -492,6 +499,25 @@ class PoptavkyCzScraper:
                 "renovace drevenych oken": 3.5,
                 "dodávka a montáž": 2.5,
                 "dodavka a montaz": 2.5,
+                # HIGH VALUE: Specific door types and production
+                "vchodových dveří": 2.8,  # MISSING - entrance doors
+                "vchodovych dveri": 2.8,
+                "dvoukřídlých dveří": 2.5,  # double-wing doors
+                "dvoukridlych dveri": 2.5,
+                "nových dveří": 2.3,  # new doors
+                "novych dveri": 2.3,
+                "výrobu": 2.0,  # MISSING - production/manufacturing
+                "vyroba": 2.0,
+                "výrobu dveří": 2.8,  # door production
+                "vyroba dveri": 2.8,
+                "výrobu oken": 2.8,  # window production
+                "vyroba oken": 2.8,
+                # Glass-related terms (user requirement: "ze skla nebo se sklem")
+                "ze skla": 1.8,
+                "se sklem": 1.8,
+                "skla": 1.5,
+                "skleněných": 1.5,
+                "sklenych": 1.5,
                 # Combined product + service terms
                 "dřevěných oken": 2.0,
                 "drevenych oken": 2.0,
@@ -517,6 +543,8 @@ class PoptavkyCzScraper:
                 "replacement": 1.2,
                 "dodávka": 1.0,
                 "dodavka": 1.0,
+                "dodání": 1.0,  # delivery
+                "dodani": 1.0,
                 "stavba": 1.0,
                 "construction": 1.0,
                 # Basic product terms
