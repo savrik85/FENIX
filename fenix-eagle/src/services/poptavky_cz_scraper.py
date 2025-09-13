@@ -594,7 +594,7 @@ class PoptavkyCzScraper:
                 score += 0.5
 
             # Normalize score to 0-1 range
-            max_possible_score = 3.0  # Reasonable maximum
+            max_possible_score = 4.0  # Increased to accommodate new high-value combinations
             score = min(score / max_possible_score, 1.0)
 
             return round(score, 2)
