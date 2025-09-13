@@ -104,6 +104,24 @@ jobs:
             sed -i 's/DEFAULT_NOTIFICATION_EMAIL=.*/DEFAULT_NOTIFICATION_EMAIL=${{ secrets.DEFAULT_NOTIFICATION_EMAIL }}/' .env
           fi
 
+          # Force overwrite .env with our current configuration to ensure source flags are set
+          echo "$(date): Updating .env configuration..." >> /var/log/fenix-deploy.log
+          cp .env.example .env
+
+          # Re-apply secrets to the fresh .env file
+          if [ -n "${{ secrets.OPENAI_API_KEY }}" ]; then
+            sed -i 's/OPENAI_API_KEY=.*/OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}/' .env
+          fi
+          if [ -n "${{ secrets.EMAIL_USERNAME }}" ]; then
+            sed -i 's/EMAIL_USERNAME=.*/EMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}/' .env
+          fi
+          if [ -n "${{ secrets.EMAIL_PASSWORD }}" ]; then
+            sed -i 's/EMAIL_PASSWORD=.*/EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}/' .env
+          fi
+          if [ -n "${{ secrets.DEFAULT_NOTIFICATION_EMAIL }}" ]; then
+            sed -i 's/DEFAULT_NOTIFICATION_EMAIL=.*/DEFAULT_NOTIFICATION_EMAIL=${{ secrets.DEFAULT_NOTIFICATION_EMAIL }}/' .env
+          fi
+
           # Run deployment with modern docker compose
           echo "$(date): Starting FENIX deployment with data preservation..." >> /var/log/fenix-deploy.log
 
